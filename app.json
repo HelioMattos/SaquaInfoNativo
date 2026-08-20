@@ -8,15 +8,8 @@
     "scheme": "saquainfo",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "ios": {
-      "supportsTablet": true,
-      "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "O SaquaInfo usa sua localização para traçar a rota até os eventos.",
-        "NSCameraUsageDescription": "O SaquaInfo usa a câmera para fotografar eventos.",
-        "NSPhotoLibraryUsageDescription": "O SaquaInfo acessa suas fotos para os eventos."
-      }
-    },
     "android": {
+      "package": "com.saquainfo.app",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
@@ -31,20 +24,9 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
-    "web": {
-      "output": "static",
-      "bundler": "metro",
-      "favicon": "./assets/images/favicon.png",
-      "name": "SaquaInfo",
-      "shortName": "SaquaInfo",
-      "description": "Eventos e informações de Saquarema",
-      "themeColor": "#ffffff",
-      "backgroundColor": "#ffffff",
-      "display": "standalone",
-      "lang": "pt-BR"
-    },
     "plugins": [
       "expo-router",
+      "expo-sqlite",
       [
         "expo-splash-screen",
         {

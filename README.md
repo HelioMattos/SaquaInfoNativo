@@ -1,15 +1,30 @@
-# SaquaInfo Nativo
+# SaquaInfo Nativo (Android)
 
-App Expo/React Native para eventos e informações de Saquarema, com **banco de dados local (SQLite)** — sem Firebase.
+App Android para eventos e informações de Saquarema, com **banco de dados local (SQLite)** — sem Firebase e sem versão web.
 
-## Como rodar
+## Como rodar no Android
+
+### Opção 1: Expo Go (mais rápido para testar)
+
+1. Instale o **Expo Go** no celular Android
+2. No PC:
 
 ```bash
 npm install
-npx expo start
+npm run android
 ```
 
-Depois escolha **web**, **Android** ou **iOS** no terminal.
+3. Escaneie o QR code ou abra no emulador Android
+
+### Opção 2: Emulador Android Studio
+
+1. Instale o [Android Studio](https://developer.android.com/studio) com um emulador configurado
+2. Rode:
+
+```bash
+npm install
+npm run android
+```
 
 ## Conta admin inicial
 
@@ -24,8 +39,8 @@ Usuários comuns podem se cadastrar em **Criar Conta** na tela de login.
 
 ## Banco local
 
-- **SQLite** via `expo-sqlite`
-- Dados ficam no dispositivo (offline-first)
+- **SQLite** via `expo-sqlite` (somente Android)
+- Dados ficam no aparelho (offline-first)
 - Sessão de login salva em **AsyncStorage**
 - Senhas com hash **bcrypt**
 
@@ -40,14 +55,10 @@ lib/auth/      → Sessão e senha
 types/         → Tipos TypeScript
 ```
 
-## Build web
+## Gerar APK (futuro)
+
+Para publicar na Play Store, use [EAS Build](https://docs.expo.dev/build/setup/):
 
 ```bash
-npm run build
+npx eas build --platform android
 ```
-
-Saída em `dist/`.
-
-## Migração
-
-Este projeto foi migrado do híbrido (Firebase) para banco local. Detalhes em `FUNCIONALIDADES_MIGRACAO.md`.
