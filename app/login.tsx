@@ -1,11 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth';
 import React, { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import CampoSenha from '../components/CampoSenha';
+import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { auth } from '../firebaseConfig';
 import { mostrarAlerta } from '../utils/mensagens';
 
 export default function LoginScreen() {
@@ -14,6 +13,7 @@ export default function LoginScreen() {
   const [carregando, setCarregando] = useState(false);
   const router = useRouter();
   const { isDark } = useTheme();
+  const { login } = useAuth();
 
   const estiloInput = {
     backgroundColor: isDark ? '#1e1e1e' : '#f9f9f9',
@@ -28,7 +28,7 @@ export default function LoginScreen() {
 
     setCarregando(true);
     try {
-      await signInWithEmailAndPassword(auth, email, senha);
+      await login(email, senha);
       router.replace('/(tabs)');
     } catch {
       mostrarAlerta('Erro', 'Usuário ou senha incorretos.');
@@ -37,23 +37,11 @@ export default function LoginScreen() {
     }
   };
 
-  const handleEsqueciSenha = async () => {
-    if (!email) {
-      return mostrarAlerta(
-        'Atenção',
-        'Digite seu e-mail acima para receber o link de recuperação.'
-      );
-    }
-
-    try {
-      await sendPasswordResetEmail(auth, email);
-      mostrarAlerta(
-        'Sucesso',
-        'E-mail de redefinição enviado! Confira sua caixa de entrada ou spam.'
-      );
-    } catch {
-      mostrarAlerta('Erro', 'Não foi possível enviar o e-mail. Verifique se o endereço está correto.');
-    }
+  const handleEsqueciSenha = () => {
+    mostrarAlerta(
+      'Recuperação local',
+      'No modo offline, a senha fica no banco local do dispositivo. Peça a um administrador para recriar o acesso ou reinstale o app se for uma conta de teste.'
+    );
   };
 
   return (

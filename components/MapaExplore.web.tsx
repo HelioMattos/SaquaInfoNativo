@@ -1,8 +1,8 @@
+import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { collection, onSnapshot, query } from 'firebase/firestore';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { db } from '../firebaseConfig';
+import { listarEventos } from '../lib/db/eventos';
 import { Evento, eventoEstaAtivo } from '../types/evento';
 
 function escapeHtml(texto: string) {
@@ -18,19 +18,21 @@ export default function MapaExplore() {
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [carregando, setCarregando] = useState(true);
 
-  useEffect(() => {
-    const q = query(collection(db, 'eventos'));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const lista: Evento[] = [];
-      querySnapshot.forEach((docSnap) => {
-        const evento = { id: docSnap.id, ...docSnap.data() } as Evento;
-        if (eventoEstaAtivo(evento)) lista.push(evento);
-      });
-      setEventos(lista);
+  const carregarEventos = useCallback(async () => {
+    setCarregando(true);
+    try {
+      const lista = await listarEventos();
+      setEventos(lista.filter(eventoEstaAtivo));
+    } finally {
       setCarregando(false);
-    });
-    return () => unsubscribe();
+    }
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      carregarEventos();
+    }, [carregarEventos])
+  );
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {

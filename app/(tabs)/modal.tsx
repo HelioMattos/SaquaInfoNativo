@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { deleteDoc, doc, onSnapshot } from 'firebase/firestore';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import MapaModal from '../../components/MapaModal';
 import { useTheme } from '../../context/ThemeContext';
-import { db } from '../../firebaseConfig';
+import { excluirEvento, obterEventoPorId } from '../../lib/db/eventos';
 import { useAdmin } from '../../hooks/useAdmin';
 import { getModalStyles } from '../../styles/modal.styles';
 import { Evento, parseImagens } from '../../types/evento';
@@ -41,25 +41,27 @@ export default function ModalScreen() {
 
   const eventoId = (params.id as string) || '';
 
-  useEffect(() => {
+  const carregarEvento = useCallback(async () => {
     if (!eventoId) {
       setCarregando(false);
+      setEvento(null);
       return;
     }
 
-    const unsubscribe = onSnapshot(
-      doc(db, 'eventos', eventoId),
-      (snap) => {
-        if (snap.exists()) {
-          setEvento({ id: snap.id, ...snap.data() } as Evento);
-        }
-        setCarregando(false);
-      },
-      () => setCarregando(false)
-    );
-
-    return unsubscribe;
+    setCarregando(true);
+    try {
+      const dados = await obterEventoPorId(eventoId);
+      setEvento(dados);
+    } finally {
+      setCarregando(false);
+    }
   }, [eventoId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      carregarEvento();
+    }, [carregarEvento])
+  );
 
   const imagens = parseImagens(evento?.imagens);
 
@@ -87,7 +89,7 @@ export default function ModalScreen() {
 
     confirmarAcao('Excluir', 'Deseja remover este evento?', 'Excluir', async () => {
       try {
-        await deleteDoc(doc(db, 'eventos', evento.id));
+        await excluirEvento(evento.id);
         router.back();
       } catch {
         mostrarAlerta('Erro', 'Não foi possível excluir o evento. Tente novamente.');

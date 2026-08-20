@@ -5,17 +5,17 @@ import { SafeAreaView, ScrollView, Text, TouchableOpacity, View } from 'react-na
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { getPerfilStyles } from '../../styles/perfil.styles';
-import { confirmarLogout, fazerLogout } from '../../utils/authActions';
+import { confirmarLogout } from '../../utils/authActions';
 
 export default function PerfilScreen() {
   const { isDark, toggleTheme } = useTheme();
   const styles = getPerfilStyles(isDark);
-  const { user, isLoggedIn, isAdmin } = useAuth();
+  const { user, isLoggedIn, isAdmin, logout } = useAuth();
   const router = useRouter();
 
   const handleLogout = () => {
     confirmarLogout(async () => {
-      await fazerLogout();
+      await logout();
     });
   };
 

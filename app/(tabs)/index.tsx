@@ -1,13 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, Platform, StatusBar, Text, TouchableOpacity, View } from 'react-native';
 import HeaderActions from '../../components/HeaderActions';
 import LogoSaquaInfo from '../../components/LogoSaquaInfo';
 import { useTheme } from '../../context/ThemeContext';
-import { db } from '../../firebaseConfig';
+import { listarEventos } from '../../lib/db/eventos';
 import { getIndexStyles } from '../../styles/index.styles';
 import { Evento, eventoEstaAtivo, parseImagens } from '../../types/evento';
 
@@ -27,23 +27,21 @@ export default function HomeScreen() {
   const [carregando, setCarregando] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    const q = query(collection(db, 'eventos'), orderBy('criadoEm', 'desc'));
-    const unsubscribe = onSnapshot(
-      q,
-      (querySnapshot) => {
-        const lista: Evento[] = [];
-        querySnapshot.forEach((docSnap) => {
-          const evento = { id: docSnap.id, ...docSnap.data() } as Evento;
-          if (eventoEstaAtivo(evento)) lista.push(evento);
-        });
-        setEventos(lista);
-        setCarregando(false);
-      },
-      () => setCarregando(false)
-    );
-    return () => unsubscribe();
+  const carregarEventos = useCallback(async () => {
+    setCarregando(true);
+    try {
+      const lista = await listarEventos();
+      setEventos(lista.filter(eventoEstaAtivo));
+    } finally {
+      setCarregando(false);
+    }
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      carregarEventos();
+    }, [carregarEventos])
+  );
 
   return (
     <View style={styles.container}>

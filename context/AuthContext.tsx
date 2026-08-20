@@ -1,13 +1,21 @@
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { auth, db } from '../firebaseConfig';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import {
+  autenticarUsuario,
+  encerrarSessao,
+  obterSessaoAtual,
+  registrarUsuario,
+} from '../lib/db/users';
+import type { UsuarioSessao } from '../types/usuario';
 
 interface AuthContextValue {
-  user: User | null;
+  user: UsuarioSessao | null;
   isLoggedIn: boolean;
   isAdmin: boolean;
   loading: boolean;
+  login: (email: string, senha: string) => Promise<void>;
+  register: (email: string, senha: string) => Promise<void>;
+  logout: () => Promise<void>;
+  refreshSession: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue>({
@@ -15,33 +23,50 @@ const AuthContext = createContext<AuthContextValue>({
   isLoggedIn: false,
   isAdmin: false,
   loading: true,
+  login: async () => {},
+  register: async () => {},
+  logout: async () => {},
+  refreshSession: async () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [user, setUser] = useState<UsuarioSessao | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const refreshSession = useCallback(async () => {
+    const sessao = await obterSessaoAtual();
+    setUser(sessao);
+  }, []);
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
+    let ativo = true;
 
-      if (currentUser?.email) {
-        const emailLogado = currentUser.email.toLowerCase().trim();
-        try {
-          const userDoc = await getDoc(doc(db, 'usuarios', emailLogado));
-          setIsAdmin(userDoc.exists() && userDoc.data().tipo === 'admin');
-        } catch {
-          setIsAdmin(false);
-        }
-      } else {
-        setIsAdmin(false);
+    (async () => {
+      try {
+        const sessao = await obterSessaoAtual();
+        if (ativo) setUser(sessao);
+      } finally {
+        if (ativo) setLoading(false);
       }
+    })();
 
-      setLoading(false);
-    });
+    return () => {
+      ativo = false;
+    };
+  }, []);
 
-    return unsubscribe;
+  const login = useCallback(async (email: string, senha: string) => {
+    const sessao = await autenticarUsuario(email, senha);
+    setUser(sessao);
+  }, []);
+
+  const register = useCallback(async (email: string, senha: string) => {
+    await registrarUsuario(email, senha);
+  }, []);
+
+  const logout = useCallback(async () => {
+    await encerrarSessao();
+    setUser(null);
   }, []);
 
   return (
@@ -49,8 +74,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         isLoggedIn: !!user,
-        isAdmin,
+        isAdmin: user?.tipo === 'admin',
         loading,
+        login,
+        register,
+        logout,
+        refreshSession,
       }}
     >
       {children}

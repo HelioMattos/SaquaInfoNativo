@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { addDoc, collection, doc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -17,8 +16,8 @@ import MapaCustomizado from '../components/MapaCustomizado';
 import SeletorDataHora from '../components/SeletorDataHora';
 import SeletorFotos from '../components/SeletorFotos';
 import { useTheme } from '../context/ThemeContext';
-import { db } from '../firebaseConfig';
 import { useAdmin } from '../hooks/useAdmin';
+import { atualizarEvento, criarEvento, obterEventoPorId } from '../lib/db/eventos';
 import { getCadastrarStyles } from '../styles/cadastrar.styles';
 import { parseImagens } from '../types/evento';
 import { prepararListaImagens } from '../utils/imagens';
@@ -67,10 +66,9 @@ export default function CadastrarEvento() {
 
     const carregarEvento = async () => {
       try {
-        const snap = await getDoc(doc(db, 'eventos', params.id as string));
-        if (!snap.exists()) return;
+        const data = await obterEventoPorId(params.id as string);
+        if (!data) return;
 
-        const data = snap.data();
         setTitulo(data.titulo || '');
         setLocal(data.local || '');
         setDescricao(data.descricao || '');
@@ -113,13 +111,12 @@ export default function CadastrarEvento() {
         dataTermino: dataTermino.toISOString(),
         latitude: coordenadas.latitude,
         longitude: coordenadas.longitude,
-        atualizadoEm: serverTimestamp(),
       };
 
       if (isEdicao) {
-        await updateDoc(doc(db, 'eventos', params.id as string), dados);
+        await atualizarEvento(params.id as string, dados);
       } else {
-        await addDoc(collection(db, 'eventos'), { ...dados, criadoEm: serverTimestamp() });
+        await criarEvento(dados);
       }
 
       router.back();

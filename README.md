@@ -1,50 +1,53 @@
-# Welcome to your Expo app 👋
+# SaquaInfo Nativo
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+App Expo/React Native para eventos e informações de Saquarema, com **banco de dados local (SQLite)** — sem Firebase.
 
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Como rodar
 
 ```bash
-npm run reset-project
+npm install
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Depois escolha **web**, **Android** ou **iOS** no terminal.
 
-## Learn more
+## Conta admin inicial
 
-To learn more about developing your project with Expo, look at the following resources:
+Na primeira execução, o app cria um administrador local:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+| Campo | Valor |
+|-------|-------|
+| E-mail | `admin@saquainfo.com` |
+| Senha | `admin123` |
 
-## Join the community
+Usuários comuns podem se cadastrar em **Criar Conta** na tela de login.
 
-Join our community of developers creating universal apps.
+## Banco local
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- **SQLite** via `expo-sqlite`
+- Dados ficam no dispositivo (offline-first)
+- Sessão de login salva em **AsyncStorage**
+- Senhas com hash **bcrypt**
+
+## Estrutura principal
+
+```
+app/           → Telas (Expo Router)
+components/    → UI, mapas, formulários
+context/       → Auth e tema
+lib/db/        → SQLite (usuários e eventos)
+lib/auth/      → Sessão e senha
+types/         → Tipos TypeScript
+```
+
+## Build web
+
+```bash
+npm run build
+```
+
+Saída em `dist/`.
+
+## Migração
+
+Este projeto foi migrado do híbrido (Firebase) para banco local. Detalhes em `FUNCIONALIDADES_MIGRACAO.md`.

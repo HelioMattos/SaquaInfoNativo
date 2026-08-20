@@ -1,11 +1,9 @@
 import { useRouter } from 'expo-router';
-import { createUserWithEmailAndPassword, signOut } from 'firebase/auth';
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import CampoSenha from '../components/CampoSenha';
+import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { auth, db } from '../firebaseConfig';
 import { mostrarAlerta } from '../utils/mensagens';
 
 export default function Registrar() {
@@ -15,6 +13,7 @@ export default function Registrar() {
   const [carregando, setCarregando] = useState(false);
   const router = useRouter();
   const { isDark } = useTheme();
+  const { register } = useAuth();
 
   const estiloInput = {
     backgroundColor: isDark ? '#1e1e1e' : '#f9f9f9',
@@ -35,20 +34,15 @@ export default function Registrar() {
 
     setCarregando(true);
     try {
-      const cred = await createUserWithEmailAndPassword(auth, email, senha);
-      const emailNormalizado = cred.user.email?.toLowerCase().trim() || '';
-
-      await setDoc(doc(db, 'usuarios', emailNormalizado), {
-        email: emailNormalizado,
-        tipo: 'usuario',
-        criadoEm: serverTimestamp(),
-      });
-
-      await signOut(auth);
+      await register(email, senha);
       mostrarAlerta('Sucesso', 'Usuário cadastrado com sucesso!');
       router.replace('/login');
-    } catch {
-      mostrarAlerta('Erro', 'Não foi possível cadastrar. Verifique o e-mail ou tente outra senha.');
+    } catch (erro) {
+      const mensagem =
+        erro instanceof Error && erro.message === 'E-mail já cadastrado.'
+          ? erro.message
+          : 'Não foi possível cadastrar. Verifique o e-mail ou tente outra senha.';
+      mostrarAlerta('Erro', mensagem);
     } finally {
       setCarregando(false);
     }
