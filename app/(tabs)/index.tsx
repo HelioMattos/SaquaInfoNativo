@@ -4,8 +4,10 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, Platform, StatusBar, Text, TouchableOpacity, View } from 'react-native';
+import BadgeSync from '../../components/BadgeSync';
 import HeaderActions from '../../components/HeaderActions';
 import LogoSaquaInfo from '../../components/LogoSaquaInfo';
+import { useSync } from '../../context/SyncContext';
 import { useTheme } from '../../context/ThemeContext';
 import { listarEventos } from '../../lib/db/eventos';
 import { getIndexStyles } from '../../styles/index.styles';
@@ -26,6 +28,7 @@ export default function HomeScreen() {
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [carregando, setCarregando] = useState(true);
   const router = useRouter();
+  const { fila } = useSync();
 
   const carregarEventos = useCallback(async () => {
     setCarregando(true);
@@ -69,6 +72,8 @@ export default function HomeScreen() {
             const fotoCapa =
               imagens[0] || 'https://via.placeholder.com/150x150.png?text=Sem+Foto';
 
+            const statusFila = fila.find((itemFila) => itemFila.id === item.id)?.status;
+
             return (
               <TouchableOpacity
                 style={styles.card}
@@ -98,6 +103,7 @@ export default function HomeScreen() {
                   <Text style={styles.cardLocal} numberOfLines={1}>
                     📍 {item.local}
                   </Text>
+                  <BadgeSync status={statusFila ?? item.statusSync} />
                 </View>
 
                 <Ionicons name="chevron-forward" size={20} color="#007bff" style={styles.cardSeta} />

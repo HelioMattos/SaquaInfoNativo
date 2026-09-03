@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { SafeAreaView, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import PainelStatusDados from '../../components/PainelStatusDados';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { getPerfilStyles } from '../../styles/perfil.styles';
@@ -43,6 +44,8 @@ export default function PerfilScreen() {
             <Text style={styles.logoutText}>ENTRAR</Text>
           </TouchableOpacity>
 
+          <PainelStatusDados />
+
           <TouchableOpacity style={styles.infoRow} onPress={() => router.push('/qr')}>
             <Ionicons name="qr-code-outline" size={24} color="#007bff" />
             <Text style={styles.infoText}>QR Code do app</Text>
@@ -71,6 +74,8 @@ export default function PerfilScreen() {
           <Text style={styles.userName}>Bem-vindo!</Text>
           <Text style={styles.userEmail}>{user?.email}</Text>
         </View>
+
+        <PainelStatusDados />
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Minha Conta</Text>

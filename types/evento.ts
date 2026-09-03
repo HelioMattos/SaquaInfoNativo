@@ -1,3 +1,17 @@
+export type StatusSync = 'PENDENTE' | 'SINCRONIZANDO' | 'SINCRONIZADO';
+
+export interface EventoInput {
+  titulo: string;
+  local: string;
+  descricao: string;
+  categoria: string;
+  latitude: number;
+  longitude: number;
+  dataInicio: string;
+  dataTermino: string;
+  imagens: string[];
+}
+
 export interface Evento {
   id: string;
   titulo: string;
@@ -9,6 +23,7 @@ export interface Evento {
   dataInicio: string;
   dataTermino: string;
   imagens?: string | string[];
+  statusSync?: StatusSync;
 }
 
 /** Evento visível na lista até 1 dia após a data/hora de término. */

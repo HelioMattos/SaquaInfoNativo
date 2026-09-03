@@ -1,5 +1,7 @@
-import type { Evento } from '../../types/evento';
+import type { Evento, EventoInput, StatusSync } from '../../types/evento';
 import { getDb } from './index';
+
+export type { EventoInput };
 
 interface EventoRow {
   id: string;
@@ -14,18 +16,7 @@ interface EventoRow {
   imagens: string | null;
   criado_em: string;
   atualizado_em: string;
-}
-
-export interface EventoInput {
-  titulo: string;
-  local: string;
-  descricao: string;
-  categoria: string;
-  latitude: number;
-  longitude: number;
-  dataInicio: string;
-  dataTermino: string;
-  imagens: string[];
+  status_sync?: string | null;
 }
 
 function mapEvento(row: EventoRow): Evento {
@@ -51,6 +42,7 @@ function mapEvento(row: EventoRow): Evento {
     dataInicio: row.data_inicio,
     dataTermino: row.data_termino,
     imagens,
+    statusSync: (row.status_sync as Evento['statusSync']) || 'SINCRONIZADO',
   };
 }
 
@@ -84,8 +76,8 @@ export async function criarEvento(dados: EventoInput): Promise<string> {
   await db.runAsync(
     `INSERT INTO eventos (
       id, titulo, local, descricao, categoria, latitude, longitude,
-      data_inicio, data_termino, imagens, criado_em, atualizado_em
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      data_inicio, data_termino, imagens, criado_em, atualizado_em, status_sync
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     id,
     dados.titulo,
     dados.local,
@@ -97,7 +89,8 @@ export async function criarEvento(dados: EventoInput): Promise<string> {
     dados.dataTermino,
     JSON.stringify(dados.imagens),
     agora,
-    agora
+    agora,
+    'PENDENTE'
   );
 
   return id;
@@ -111,7 +104,7 @@ export async function atualizarEvento(id: string, dados: EventoInput): Promise<v
     `UPDATE eventos SET
       titulo = ?, local = ?, descricao = ?, categoria = ?,
       latitude = ?, longitude = ?, data_inicio = ?, data_termino = ?,
-      imagens = ?, atualizado_em = ?
+      imagens = ?, atualizado_em = ?, status_sync = ?
     WHERE id = ?`,
     dados.titulo,
     dados.local,
@@ -123,6 +116,7 @@ export async function atualizarEvento(id: string, dados: EventoInput): Promise<v
     dados.dataTermino,
     JSON.stringify(dados.imagens),
     agora,
+    'PENDENTE',
     id
   );
 
@@ -138,4 +132,9 @@ export async function excluirEvento(id: string): Promise<void> {
   if (result.changes === 0) {
     throw new Error('Evento não encontrado.');
   }
+}
+
+export async function atualizarStatusSync(id: string, status: StatusSync): Promise<void> {
+  const db = await getDb();
+  await db.runAsync('UPDATE eventos SET status_sync = ?, atualizado_em = ? WHERE id = ?', status, new Date().toISOString(), id);
 }

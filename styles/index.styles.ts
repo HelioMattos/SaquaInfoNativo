@@ -1,4 +1,4 @@
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 export const getIndexStyles = (isDark: boolean) => {
   const theme = {
@@ -20,7 +20,7 @@ export const getIndexStyles = (isDark: boolean) => {
       justifyContent: 'space-between', 
       alignItems: 'center', 
       paddingHorizontal: 20, 
-      paddingTop: Platform.OS === 'ios' ? 60 : 45, 
+      paddingTop: 12, 
       paddingBottom: 15, 
       backgroundColor: theme.header,
       borderBottomWidth: 1, 

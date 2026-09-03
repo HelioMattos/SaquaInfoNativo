@@ -15,9 +15,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import BadgeSync from '../../components/BadgeSync';
 import MapaModal from '../../components/MapaModal';
+import { useSync } from '../../context/SyncContext';
 import { useTheme } from '../../context/ThemeContext';
-import { excluirEvento, obterEventoPorId } from '../../lib/db/eventos';
+import { obterEventoPorId } from '../../lib/db/eventos';
 import { useAdmin } from '../../hooks/useAdmin';
 import { getModalStyles } from '../../styles/modal.styles';
 import { Evento, parseImagens } from '../../types/evento';
@@ -35,6 +37,7 @@ export default function ModalScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { isAdmin } = useAdmin();
+  const { fila, removerEvento } = useSync();
   const [activeImage, setActiveImage] = useState(0);
   const [evento, setEvento] = useState<Evento | null>(null);
   const [carregando, setCarregando] = useState(true);
@@ -89,7 +92,7 @@ export default function ModalScreen() {
 
     confirmarAcao('Excluir', 'Deseja remover este evento?', 'Excluir', async () => {
       try {
-        await excluirEvento(evento.id);
+        await removerEvento(evento.id, evento.titulo);
         router.back();
       } catch {
         mostrarAlerta('Erro', 'Não foi possível excluir o evento. Tente novamente.');
@@ -197,6 +200,11 @@ export default function ModalScreen() {
           <View style={styles.tag}>
             <Text style={styles.tagTexto}>{evento.categoria || 'Geral'}</Text>
           </View>
+        </View>
+        <View style={{ marginBottom: 16 }}>
+          <BadgeSync
+            status={fila.find((itemFila) => itemFila.id === evento.id)?.status ?? evento.statusSync}
+          />
         </View>
 
         <View style={styles.infoRow}>

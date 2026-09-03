@@ -24,9 +24,20 @@ const SCHEMA = `
     data_termino TEXT NOT NULL,
     imagens TEXT,
     criado_em TEXT NOT NULL,
-    atualizado_em TEXT NOT NULL
+    atualizado_em TEXT NOT NULL,
+    status_sync TEXT NOT NULL DEFAULT 'SINCRONIZADO'
   );
 `;
+
+async function migrarSchema(db: SQLite.SQLiteDatabase): Promise<void> {
+  try {
+    await db.execAsync(
+      "ALTER TABLE eventos ADD COLUMN status_sync TEXT NOT NULL DEFAULT 'SINCRONIZADO'"
+    );
+  } catch {
+    // coluna já existe em bancos criados após o desafio Offline First
+  }
+}
 
 async function seedAdmin(db: SQLite.SQLiteDatabase): Promise<void> {
   const row = await db.getFirstAsync<{ total: number }>('SELECT COUNT(*) as total FROM usuarios');
@@ -47,6 +58,7 @@ async function seedAdmin(db: SQLite.SQLiteDatabase): Promise<void> {
 async function initDb(): Promise<SQLite.SQLiteDatabase> {
   const db = await SQLite.openDatabaseAsync('saquainfo.db');
   await db.execAsync(SCHEMA);
+  await migrarSchema(db);
   await seedAdmin(db);
   return db;
 }

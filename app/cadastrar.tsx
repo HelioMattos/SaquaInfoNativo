@@ -15,9 +15,10 @@ import {
 import MapaCustomizado from '../components/MapaCustomizado';
 import SeletorDataHora from '../components/SeletorDataHora';
 import SeletorFotos from '../components/SeletorFotos';
+import { useSync } from '../context/SyncContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAdmin } from '../hooks/useAdmin';
-import { atualizarEvento, criarEvento, obterEventoPorId } from '../lib/db/eventos';
+import { obterEventoPorId } from '../lib/db/eventos';
 import { getCadastrarStyles } from '../styles/cadastrar.styles';
 import { parseImagens } from '../types/evento';
 import { prepararListaImagens } from '../utils/imagens';
@@ -28,6 +29,7 @@ export default function CadastrarEvento() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { isAdmin, loading: loadingAdmin } = useAdmin();
+  const { isConnected, salvarEvento } = useSync();
 
   const isEdicao = Boolean(params.id);
 
@@ -114,9 +116,16 @@ export default function CadastrarEvento() {
       };
 
       if (isEdicao) {
-        await atualizarEvento(params.id as string, dados);
+        await salvarEvento(dados, params.id as string);
       } else {
-        await criarEvento(dados);
+        await salvarEvento(dados);
+      }
+
+      if (!isConnected) {
+        Alert.alert(
+          'Salvo offline',
+          'Suas alterações serão armazenadas e sincronizadas quando a conexão retornar.'
+        );
       }
 
       router.back();
@@ -226,7 +235,13 @@ export default function CadastrarEvento() {
         <View style={styles.buttonArea}>
           <TouchableOpacity style={styles.button} onPress={handleSalvar} disabled={carregando}>
             <Text style={styles.buttonText}>
-              {processandoFotos ? 'PROCESSANDO FOTOS...' : carregando ? 'SALVANDO...' : 'SALVAR EVENTO'}
+              {processandoFotos
+                ? 'PROCESSANDO FOTOS...'
+                : carregando
+                  ? 'SALVANDO...'
+                  : isConnected
+                    ? 'SALVAR EVENTO'
+                    : 'SALVAR OFFLINE'}
             </Text>
           </TouchableOpacity>
 
