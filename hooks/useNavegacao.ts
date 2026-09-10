@@ -8,7 +8,9 @@ import {
   Coordenada,
   distanciaEntre,
   formatarDistancia,
+  gpsLongeDoEvento,
   InfoRota,
+  origemProximaDoEvento,
 } from '../utils/rota';
 
 interface UseNavegacaoOptions {
@@ -149,8 +151,15 @@ export function useNavegacao({
   const tracarRota = async () => {
     setCarregando(true);
     try {
-      const origem = await obterLocalizacaoAtual();
-      if (!origem) return;
+      let origem = await obterLocalizacaoAtual();
+
+      if (!origem || gpsLongeDoEvento(origem, destino)) {
+        origem = origemProximaDoEvento(destino);
+        Alert.alert(
+          'Localização do emulador',
+          'O GPS não está em Saquarema. O trajeto será calculado a partir de um ponto próximo ao evento.'
+        );
+      }
 
       const infoRota = await buscarRota(origem, destino);
       if (!infoRota) {

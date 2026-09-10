@@ -1,11 +1,19 @@
 import bcrypt from 'bcryptjs';
 
-const ROUNDS = 10;
+const ROUNDS = 8;
+
+bcrypt.setRandomFallback((len: number) => {
+  const bytes: number[] = [];
+  for (let i = 0; i < len; i += 1) {
+    bytes.push(Math.floor(Math.random() * 256));
+  }
+  return bytes;
+});
 
 export async function hashSenha(senha: string): Promise<string> {
-  return bcrypt.hash(senha, ROUNDS);
+  return bcrypt.hashSync(senha, ROUNDS);
 }
 
 export async function verificarSenha(senha: string, hash: string): Promise<boolean> {
-  return bcrypt.compare(senha, hash);
+  return bcrypt.compareSync(senha, hash);
 }

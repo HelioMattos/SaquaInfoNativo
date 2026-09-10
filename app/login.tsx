@@ -81,6 +81,10 @@ export default function LoginScreen() {
         {carregando ? <ActivityIndicator color="#fff" /> : <Text style={styles.botaoTexto}>ENTRAR</Text>}
       </TouchableOpacity>
 
+      <Text style={{ textAlign: 'center', color: isDark ? '#888' : '#999', fontSize: 12, marginTop: 16 }}>
+        Admin de teste: admin@saquainfo.com / admin123
+      </Text>
+
       <TouchableOpacity onPress={() => router.push('/registrar')} style={{ marginTop: 20 }}>
         <Text style={{ textAlign: 'center', color: isDark ? '#aaa' : '#666' }}>
           Não tem uma conta? <Text style={{ color: '#007bff', fontWeight: 'bold' }}>Cadastre-se</Text>

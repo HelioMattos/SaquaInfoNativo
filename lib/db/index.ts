@@ -40,8 +40,11 @@ async function migrarSchema(db: SQLite.SQLiteDatabase): Promise<void> {
 }
 
 async function seedAdmin(db: SQLite.SQLiteDatabase): Promise<void> {
-  const row = await db.getFirstAsync<{ total: number }>('SELECT COUNT(*) as total FROM usuarios');
-  if ((row?.total ?? 0) > 0) return;
+  const existente = await db.getFirstAsync<{ email: string }>(
+    'SELECT email FROM usuarios WHERE email = ?',
+    'admin@saquainfo.com'
+  );
+  if (existente) return;
 
   const agora = new Date().toISOString();
   const senhaHash = await hashSenha('admin123');

@@ -60,19 +60,39 @@ function parsePassos(steps: any[]): PassoNavegacao[] {
   });
 }
 
-export async function buscarRota(
-  origem: Coordenada,
-  destino: Coordenada
-): Promise<InfoRota | null> {
+const ENDPOINTS_OSRM = [
+  'https://router.project-osrm.org/route/v1/driving/',
+  'https://routing.openstreetmap.de/routed-car/route/v1/driving/',
+];
+
+const TIMEOUT_MS = 12000;
+const DISTANCIA_MAXIMA_GPS_METROS = 400000;
+
+export function origemProximaDoEvento(destino: Coordenada): Coordenada {
+  return {
+    latitude: destino.latitude + 0.018,
+    longitude: destino.longitude - 0.012,
+  };
+}
+
+export function gpsLongeDoEvento(origem: Coordenada, destino: Coordenada): boolean {
+  return distanciaEntre(origem, destino) > DISTANCIA_MAXIMA_GPS_METROS;
+}
+
+async function consultarOsrm(origem: Coordenada, destino: Coordenada, base: string): Promise<InfoRota | null> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
   try {
     const url =
-      `https://router.project-osrm.org/route/v1/driving/` +
+      `${base}` +
       `${origem.longitude},${origem.latitude};${destino.longitude},${destino.latitude}` +
       `?overview=full&geometries=geojson&steps=true`;
 
-    const res = await fetch(url);
-    const data = await res.json();
+    const res = await fetch(url, { signal: controller.signal });
+    if (!res.ok) return null;
 
+    const data = await res.json();
     if (data.code !== 'Ok' || !data.routes?.[0]) return null;
 
     const route = data.routes[0];
@@ -90,24 +110,64 @@ export async function buscarRota(
       coordenadas,
       distanciaMetros: route.distance,
       duracaoSegundos: route.duration,
-      passos: passos.length > 0 ? passos : [
-        {
-          instrucao: 'Siga em frente até o destino',
-          instrucaoCurta: 'Siga em frente',
-          distanciaMetros: route.distance,
-          coordenada: destino,
-        },
-        {
-          instrucao: 'Você chegou ao destino',
-          instrucaoCurta: 'Chegou ao destino',
-          distanciaMetros: 0,
-          coordenada: destino,
-        },
-      ],
+      passos:
+        passos.length > 0
+          ? passos
+          : [
+              {
+                instrucao: 'Siga em frente até o destino',
+                instrucaoCurta: 'Siga em frente',
+                distanciaMetros: route.distance,
+                coordenada: destino,
+              },
+              {
+                instrucao: 'Você chegou ao destino',
+                instrucaoCurta: 'Chegou ao destino',
+                distanciaMetros: 0,
+                coordenada: destino,
+              },
+            ],
     };
   } catch {
     return null;
+  } finally {
+    clearTimeout(timeout);
   }
+}
+
+function rotaEmLinhaReta(origem: Coordenada, destino: Coordenada): InfoRota {
+  const metros = distanciaEntre(origem, destino);
+  return {
+    coordenadas: [origem, destino],
+    distanciaMetros: metros,
+    duracaoSegundos: Math.max(60, metros / 8.5),
+    passos: [
+      {
+        instrucao: 'Siga em direção ao evento',
+        instrucaoCurta: 'Siga em frente',
+        distanciaMetros: metros,
+        coordenada: destino,
+      },
+      {
+        instrucao: 'Você chegou ao destino',
+        instrucaoCurta: 'Chegou ao destino',
+        distanciaMetros: 0,
+        coordenada: destino,
+      },
+    ],
+  };
+}
+
+export async function buscarRota(
+  origem: Coordenada,
+  destino: Coordenada
+): Promise<InfoRota | null> {
+  for (const endpoint of ENDPOINTS_OSRM) {
+    const rota = await consultarOsrm(origem, destino, endpoint);
+    if (rota) return rota;
+  }
+
+  return rotaEmLinhaReta(origem, destino);
 }
 
 export function distanciaEntre(a: Coordenada, b: Coordenada): number {

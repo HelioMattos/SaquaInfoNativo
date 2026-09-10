@@ -13,12 +13,27 @@ export async function obterLocalizacaoAtual(): Promise<Coordenada | null> {
     return null;
   }
 
-  const posicao = await Location.getCurrentPositionAsync({
-    accuracy: Location.Accuracy.Balanced,
-  });
+  try {
+    const ultima = await Location.getLastKnownPositionAsync();
+    if (ultima) {
+      return {
+        latitude: ultima.coords.latitude,
+        longitude: ultima.coords.longitude,
+      };
+    }
 
-  return {
-    latitude: posicao.coords.latitude,
-    longitude: posicao.coords.longitude,
-  };
+    const posicao = await Promise.race([
+      Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
+      new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('timeout')), 8000);
+      }),
+    ]);
+
+    return {
+      latitude: posicao.coords.latitude,
+      longitude: posicao.coords.longitude,
+    };
+  } catch {
+    return null;
+  }
 }
