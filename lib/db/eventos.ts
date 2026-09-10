@@ -1,5 +1,5 @@
 import type { Evento, EventoInput, StatusSync } from '../../types/evento';
-import { getDb } from './index';
+import { withDb } from './index';
 
 export type { EventoInput };
 
@@ -55,86 +55,97 @@ function gerarId(): string {
 }
 
 export async function listarEventos(): Promise<Evento[]> {
-  const db = await getDb();
-  const rows = await db.getAllAsync<EventoRow>(
-    'SELECT * FROM eventos ORDER BY criado_em DESC'
-  );
-  return rows.map(mapEvento);
+  return withDb(async (db) => {
+    const rows = await db.getAllAsync<EventoRow>(
+      'SELECT * FROM eventos ORDER BY criado_em DESC'
+    );
+    return rows.map(mapEvento);
+  });
 }
 
 export async function obterEventoPorId(id: string): Promise<Evento | null> {
-  const db = await getDb();
-  const row = await db.getFirstAsync<EventoRow>('SELECT * FROM eventos WHERE id = ?', id);
-  return row ? mapEvento(row) : null;
+  return withDb(async (db) => {
+    const row = await db.getFirstAsync<EventoRow>('SELECT * FROM eventos WHERE id = ?', id);
+    return row ? mapEvento(row) : null;
+  });
 }
 
 export async function criarEvento(dados: EventoInput): Promise<string> {
-  const db = await getDb();
-  const agora = new Date().toISOString();
-  const id = gerarId();
+  return withDb(async (db) => {
+    const agora = new Date().toISOString();
+    const id = gerarId();
 
-  await db.runAsync(
-    `INSERT INTO eventos (
-      id, titulo, local, descricao, categoria, latitude, longitude,
-      data_inicio, data_termino, imagens, criado_em, atualizado_em, status_sync
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    id,
-    dados.titulo,
-    dados.local,
-    dados.descricao,
-    dados.categoria,
-    dados.latitude,
-    dados.longitude,
-    dados.dataInicio,
-    dados.dataTermino,
-    JSON.stringify(dados.imagens),
-    agora,
-    agora,
-    'PENDENTE'
-  );
+    await db.runAsync(
+      `INSERT INTO eventos (
+        id, titulo, local, descricao, categoria, latitude, longitude,
+        data_inicio, data_termino, imagens, criado_em, atualizado_em, status_sync
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      id,
+      dados.titulo,
+      dados.local,
+      dados.descricao,
+      dados.categoria,
+      dados.latitude,
+      dados.longitude,
+      dados.dataInicio,
+      dados.dataTermino,
+      JSON.stringify(dados.imagens ?? []),
+      agora,
+      agora,
+      'PENDENTE'
+    );
 
-  return id;
+    return id;
+  });
 }
 
 export async function atualizarEvento(id: string, dados: EventoInput): Promise<void> {
-  const db = await getDb();
-  const agora = new Date().toISOString();
+  await withDb(async (db) => {
+    const agora = new Date().toISOString();
 
-  const result = await db.runAsync(
-    `UPDATE eventos SET
-      titulo = ?, local = ?, descricao = ?, categoria = ?,
-      latitude = ?, longitude = ?, data_inicio = ?, data_termino = ?,
-      imagens = ?, atualizado_em = ?, status_sync = ?
-    WHERE id = ?`,
-    dados.titulo,
-    dados.local,
-    dados.descricao,
-    dados.categoria,
-    dados.latitude,
-    dados.longitude,
-    dados.dataInicio,
-    dados.dataTermino,
-    JSON.stringify(dados.imagens),
-    agora,
-    'PENDENTE',
-    id
-  );
+    const result = await db.runAsync(
+      `UPDATE eventos SET
+        titulo = ?, local = ?, descricao = ?, categoria = ?,
+        latitude = ?, longitude = ?, data_inicio = ?, data_termino = ?,
+        imagens = ?, atualizado_em = ?, status_sync = ?
+      WHERE id = ?`,
+      dados.titulo,
+      dados.local,
+      dados.descricao,
+      dados.categoria,
+      dados.latitude,
+      dados.longitude,
+      dados.dataInicio,
+      dados.dataTermino,
+      JSON.stringify(dados.imagens ?? []),
+      agora,
+      'PENDENTE',
+      id
+    );
 
-  if (result.changes === 0) {
-    throw new Error('Evento não encontrado.');
-  }
+    if (result.changes === 0) {
+      throw new Error('Evento não encontrado.');
+    }
+  });
 }
 
 export async function excluirEvento(id: string): Promise<void> {
-  const db = await getDb();
-  const result = await db.runAsync('DELETE FROM eventos WHERE id = ?', id);
+  await withDb(async (db) => {
+    const result = await db.runAsync('DELETE FROM eventos WHERE id = ?', id);
 
-  if (result.changes === 0) {
-    throw new Error('Evento não encontrado.');
-  }
+    if (result.changes === 0) {
+      throw new Error('Evento não encontrado.');
+    }
+  });
 }
 
 export async function atualizarStatusSync(id: string, status: StatusSync): Promise<void> {
-  const db = await getDb();
-  await db.runAsync('UPDATE eventos SET status_sync = ?, atualizado_em = ? WHERE id = ?', status, new Date().toISOString(), id);
+  await withDb(async (db) => {
+    await db.runAsync(
+      'UPDATE eventos SET status_sync = ?, atualizado_em = ? WHERE id = ?',
+      status,
+      new Date().toISOString(),
+      id
+    );
+  });
 }

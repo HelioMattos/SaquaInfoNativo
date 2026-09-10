@@ -82,6 +82,9 @@ export const getIndexStyles = (isDark: boolean) => {
       paddingHorizontal: 8,
       paddingVertical: 2,
       borderRadius: 6,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
     },
     cardCategoriaTexto: {
       color: '#007bff',

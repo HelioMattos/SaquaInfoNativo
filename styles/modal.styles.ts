@@ -28,7 +28,15 @@ export const getModalStyles = (isDark: boolean) => {
     content: { padding: 20 },
     rowInfo: { flexDirection: 'row', alignItems: 'center', marginBottom: 15, flexWrap: 'wrap' },
     tituloText: { fontSize: 26, fontWeight: 'bold', color: theme.texto, marginRight: 10 },
-    tag: { backgroundColor: '#e1f0ff', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 8 },
+    tag: {
+      backgroundColor: '#e1f0ff',
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+      borderRadius: 8,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
     tagTexto: { color: '#007bff', fontWeight: 'bold', fontSize: 12 },
     
     // LINHAS DE INFO (DATA/LOCAL)

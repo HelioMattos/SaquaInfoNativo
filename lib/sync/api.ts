@@ -19,15 +19,7 @@ export async function enviarParaServidor(item: ItemFila): Promise<void> {
         id: item.id,
         titulo: item.descricao,
         operacao: item.operacao,
-        evento: item.payload
-          ? {
-              titulo: item.payload.titulo,
-              local: item.payload.local,
-              categoria: item.payload.categoria,
-              dataInicio: item.payload.dataInicio,
-              dataTermino: item.payload.dataTermino,
-            }
-          : null,
+        payload: item.payload,
       }),
       signal: controller.signal,
     });

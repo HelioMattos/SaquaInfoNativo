@@ -25,14 +25,14 @@ export async function sincronizarDados(): Promise<ResultadoSync> {
     try {
       await enviarParaServidor(item);
       fila = await atualizarStatusItem(item.id, 'SINCRONIZADO');
-      if (item.operacao !== 'EXCLUIR') {
+      if (item.operacao !== 'EXCLUIR' && item.operacao !== 'AVALIAR') {
         await atualizarStatusSync(item.id, 'SINCRONIZADO');
       }
       enviados += 1;
     } catch (erro) {
       const mensagem = erro instanceof Error ? erro.message : 'Falha ao sincronizar';
       fila = await atualizarStatusItem(item.id, 'PENDENTE', mensagem);
-      if (item.operacao !== 'EXCLUIR') {
+      if (item.operacao !== 'EXCLUIR' && item.operacao !== 'AVALIAR') {
         await atualizarStatusSync(item.id, 'PENDENTE');
       }
       falhas += 1;

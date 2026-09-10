@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { ItemFila, StatusSync, TipoOperacao } from '../../types/sync';
-import type { EventoInput } from '../../types/evento';
+import type { ItemFila, PayloadFila, StatusSync, TipoOperacao } from '../../types/sync';
 
 const FILA_KEY = '@saquainfo/fila_sync';
 const ULTIMA_SYNC_KEY = '@saquainfo/ultima_sincronizacao';
@@ -40,7 +39,7 @@ export async function enfileirarOperacao(params: {
   id: string;
   operacao: TipoOperacao;
   descricao: string;
-  payload: EventoInput | null;
+  payload: PayloadFila;
 }): Promise<ItemFila[]> {
   const agora = new Date().toISOString();
   const fila = await lerFila();

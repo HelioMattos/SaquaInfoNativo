@@ -9,6 +9,7 @@ import React, {
   useState,
 } from 'react';
 import { atualizarEvento, criarEvento, excluirEvento } from '../lib/db/eventos';
+import { salvarAvaliacao as gravarAvaliacaoLocal } from '../lib/db/avaliacoes';
 import { enfileirarOperacao, obterFila, obterPendentes, obterUltimaSincronizacao } from '../lib/sync/fila';
 import { sincronizarDados } from '../lib/sync/sincronizar';
 import type { EventoInput } from '../types/evento';
@@ -41,6 +42,13 @@ interface SyncContextValue {
   sincronizar: () => Promise<void>;
   salvarEvento: (dados: EventoInput, idExistente?: string) => Promise<string>;
   removerEvento: (id: string, titulo: string) => Promise<void>;
+  salvarAvaliacao: (params: {
+    eventoId: string;
+    email: string;
+    nota: number;
+    mensagem: string;
+    tituloEvento: string;
+  }) => Promise<void>;
 }
 
 const SyncContext = createContext<SyncContextValue | null>(null);
@@ -162,6 +170,42 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
     [isConnected, sincronizar]
   );
 
+  const salvarAvaliacao = useCallback(
+    async (params: {
+      eventoId: string;
+      email: string;
+      nota: number;
+      mensagem: string;
+      tituloEvento: string;
+    }) => {
+      await gravarAvaliacaoLocal({
+        eventoId: params.eventoId,
+        email: params.email,
+        nota: params.nota,
+        mensagem: params.mensagem,
+      });
+
+      const novaFila = await enfileirarOperacao({
+        id: `aval_${params.eventoId}_${params.email}`,
+        operacao: 'AVALIAR',
+        descricao: `Avaliação ${params.nota}/5: ${params.tituloEvento}`,
+        payload: {
+          eventoId: params.eventoId,
+          email: params.email,
+          nota: params.nota,
+          mensagem: params.mensagem,
+        },
+      });
+      setFila(novaFila);
+      setMostrarConcluido(false);
+
+      if (isConnected) {
+        void sincronizar();
+      }
+    },
+    [isConnected, sincronizar]
+  );
+
   useEffect(() => {
     recarregarFila();
   }, [recarregarFila]);
@@ -205,6 +249,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       sincronizar,
       salvarEvento,
       removerEvento,
+      salvarAvaliacao,
     }),
     [
       isConnected,
@@ -217,6 +262,7 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       sincronizar,
       salvarEvento,
       removerEvento,
+      salvarAvaliacao,
     ]
   );
 

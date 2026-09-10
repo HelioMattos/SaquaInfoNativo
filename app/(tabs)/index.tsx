@@ -6,10 +6,12 @@ import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, Platform, StatusBar, Text, TouchableOpacity, View } from 'react-native';
 import BadgeSync from '../../components/BadgeSync';
 import HeaderActions from '../../components/HeaderActions';
+import IconeCategoria from '../../components/IconeCategoria';
 import LogoSaquaInfo from '../../components/LogoSaquaInfo';
 import { useSync } from '../../context/SyncContext';
 import { useTheme } from '../../context/ThemeContext';
 import { listarEventos } from '../../lib/db/eventos';
+import { listarMediasAvaliacoes } from '../../lib/db/avaliacoes';
 import { getIndexStyles } from '../../styles/index.styles';
 import { Evento, eventoEstaAtivo, parseImagens } from '../../types/evento';
 
@@ -26,6 +28,7 @@ export default function HomeScreen() {
   const { isDark } = useTheme();
   const styles = getIndexStyles(isDark);
   const [eventos, setEventos] = useState<Evento[]>([]);
+  const [medias, setMedias] = useState<Record<string, { media: number; total: number }>>({});
   const [carregando, setCarregando] = useState(true);
   const router = useRouter();
   const { fila } = useSync();
@@ -33,8 +36,9 @@ export default function HomeScreen() {
   const carregarEventos = useCallback(async () => {
     setCarregando(true);
     try {
-      const lista = await listarEventos();
+      const [lista, notas] = await Promise.all([listarEventos(), listarMediasAvaliacoes()]);
       setEventos(lista.filter(eventoEstaAtivo));
+      setMedias(notas);
     } finally {
       setCarregando(false);
     }
@@ -73,6 +77,7 @@ export default function HomeScreen() {
               imagens[0] || 'https://via.placeholder.com/150x150.png?text=Sem+Foto';
 
             const statusFila = fila.find((itemFila) => itemFila.id === item.id)?.status;
+            const avaliacao = medias[item.id];
 
             return (
               <TouchableOpacity
@@ -97,12 +102,19 @@ export default function HomeScreen() {
                   <View style={styles.cardMetaRow}>
                     <Text style={styles.cardData}>{formatarInicio(item.dataInicio)}</Text>
                     <View style={styles.cardCategoria}>
+                      <IconeCategoria categoria={item.categoria} size={11} color="#007bff" />
                       <Text style={styles.cardCategoriaTexto}>{item.categoria || 'Outros'}</Text>
                     </View>
                   </View>
                   <Text style={styles.cardLocal} numberOfLines={1}>
                     📍 {item.local}
                   </Text>
+                  {avaliacao ? (
+                    <Text style={{ color: '#f5a623', fontSize: 12, fontWeight: 'bold', marginTop: 4 }}>
+                      {'★'.repeat(Math.round(avaliacao.media))}
+                      {'☆'.repeat(5 - Math.round(avaliacao.media))} {avaliacao.media.toFixed(1)} ({avaliacao.total})
+                    </Text>
+                  ) : null}
                   <BadgeSync status={statusFila ?? item.statusSync} />
                 </View>
 

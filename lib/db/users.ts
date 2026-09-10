@@ -1,7 +1,7 @@
 import type { TipoUsuario, Usuario, UsuarioSessao } from '../../types/usuario';
 import { hashSenha, verificarSenha } from '../auth/password';
 import { carregarSessao, limparSessao, salvarSessao } from '../auth/session';
-import { getDb } from './index';
+import { withDb } from './index';
 
 interface UsuarioRow {
   email: string;
@@ -23,37 +23,38 @@ function normalizarEmail(email: string): string {
 }
 
 export async function registrarUsuario(email: string, senha: string): Promise<void> {
-  const db = await getDb();
   const emailNormalizado = normalizarEmail(email);
-
-  const existente = await db.getFirstAsync<{ email: string }>(
-    'SELECT email FROM usuarios WHERE email = ?',
-    emailNormalizado
-  );
-
-  if (existente) {
-    throw new Error('E-mail já cadastrado.');
-  }
-
-  const agora = new Date().toISOString();
   const senhaHash = await hashSenha(senha);
 
-  await db.runAsync(
-    'INSERT INTO usuarios (email, senha_hash, tipo, criado_em) VALUES (?, ?, ?, ?)',
-    emailNormalizado,
-    senhaHash,
-    'usuario',
-    agora
-  );
+  await withDb(async (db) => {
+    const existente = await db.getFirstAsync<{ email: string }>(
+      'SELECT email FROM usuarios WHERE email = ?',
+      emailNormalizado
+    );
+
+    if (existente) {
+      throw new Error('E-mail já cadastrado.');
+    }
+
+    const agora = new Date().toISOString();
+    await db.runAsync(
+      'INSERT INTO usuarios (email, senha_hash, tipo, criado_em) VALUES (?, ?, ?, ?)',
+      emailNormalizado,
+      senhaHash,
+      'usuario',
+      agora
+    );
+  });
 }
 
 export async function autenticarUsuario(email: string, senha: string): Promise<UsuarioSessao> {
-  const db = await getDb();
   const emailNormalizado = normalizarEmail(email);
 
-  const row = await db.getFirstAsync<UsuarioRow>(
-    'SELECT email, senha_hash, tipo, criado_em FROM usuarios WHERE email = ?',
-    emailNormalizado
+  const row = await withDb((db) =>
+    db.getFirstAsync<UsuarioRow>(
+      'SELECT email, senha_hash, tipo, criado_em FROM usuarios WHERE email = ?',
+      emailNormalizado
+    )
   );
 
   if (!row) {
@@ -71,10 +72,11 @@ export async function autenticarUsuario(email: string, senha: string): Promise<U
 }
 
 export async function obterUsuarioPorEmail(email: string): Promise<Usuario | null> {
-  const db = await getDb();
-  const row = await db.getFirstAsync<UsuarioRow>(
-    'SELECT email, senha_hash, tipo, criado_em FROM usuarios WHERE email = ?',
-    normalizarEmail(email)
+  const row = await withDb((db) =>
+    db.getFirstAsync<UsuarioRow>(
+      'SELECT email, senha_hash, tipo, criado_em FROM usuarios WHERE email = ?',
+      normalizarEmail(email)
+    )
   );
 
   return row ? mapUsuario(row) : null;

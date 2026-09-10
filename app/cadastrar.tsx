@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -12,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import IconeCategoria from '../components/IconeCategoria';
 import MapaCustomizado from '../components/MapaCustomizado';
 import SeletorDataHora from '../components/SeletorDataHora';
 import SeletorFotos from '../components/SeletorFotos';
@@ -47,14 +47,7 @@ export default function CadastrarEvento() {
   const [dataInicio, setDataInicio] = useState(new Date());
   const [dataTermino, setDataTermino] = useState(new Date());
 
-  const categorias = [
-    { id: 'Esportes', icon: 'fitness' },
-    { id: 'Show', icon: 'musical-notes' },
-    { id: 'Comida', icon: 'restaurant' },
-    { id: 'Religioso', icon: 'bonfire' },
-    { id: 'Cultural', icon: 'library' },
-    { id: 'Outros', icon: 'help-circle' },
-  ];
+  const categorias = ['Esportes', 'Show', 'Comida', 'Religioso', 'Cultural', 'Outros'];
 
   useEffect(() => {
     if (loadingAdmin) return;
@@ -130,8 +123,11 @@ export default function CadastrarEvento() {
 
       router.back();
     } catch (erro) {
+      const bruto = erro instanceof Error ? erro.message : '';
       const mensagem =
-        erro instanceof Error ? erro.message : 'Não foi possível salvar o evento. Tente novamente.';
+        bruto.includes('NativeDatabase') || bruto.includes('NullPointer')
+          ? 'O banco local travou. Feche o app no emulador e abra de novo, depois tente salvar.'
+          : bruto || 'Não foi possível salvar o evento. Tente novamente.';
       Alert.alert('Erro ao salvar', mensagem);
     } finally {
       setCarregando(false);
@@ -196,18 +192,18 @@ export default function CadastrarEvento() {
         <View style={styles.categoriaContainer}>
           {categorias.map((cat) => (
             <TouchableOpacity
-              key={cat.id}
-              style={[styles.catBadge, categoria === cat.id && styles.catBadgeSelected]}
-              onPress={() => setCategoria(cat.id)}
+              key={cat}
+              style={[styles.catBadge, categoria === cat && styles.catBadgeSelected]}
+              onPress={() => setCategoria(cat)}
             >
               <View style={styles.catBadgeInner}>
-                <Ionicons
-                  name={cat.icon as any}
+                <IconeCategoria
+                  categoria={cat}
                   size={16}
-                  color={categoria === cat.id ? '#fff' : styles.colors.texto}
+                  color={categoria === cat ? '#fff' : styles.colors.texto}
                 />
-                <Text style={[styles.catText, categoria === cat.id && styles.catTextSelected]}>
-                  {cat.id}
+                <Text style={[styles.catText, categoria === cat && styles.catTextSelected]}>
+                  {cat}
                 </Text>
               </View>
             </TouchableOpacity>

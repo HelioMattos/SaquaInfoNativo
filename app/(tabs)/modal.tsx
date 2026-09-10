@@ -16,6 +16,8 @@ import {
   View,
 } from 'react-native';
 import BadgeSync from '../../components/BadgeSync';
+import AvaliacaoEvento from '../../components/AvaliacaoEvento';
+import IconeCategoria from '../../components/IconeCategoria';
 import MapaModal from '../../components/MapaModal';
 import { useSync } from '../../context/SyncContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -198,6 +200,7 @@ export default function ModalScreen() {
         <View style={styles.rowInfo}>
           <Text style={styles.tituloText}>{evento.titulo}</Text>
           <View style={styles.tag}>
+            <IconeCategoria categoria={evento.categoria} size={13} color="#007bff" />
             <Text style={styles.tagTexto}>{evento.categoria || 'Geral'}</Text>
           </View>
         </View>
@@ -237,6 +240,8 @@ export default function ModalScreen() {
             {evento.descricao || 'Nenhuma descrição detalhada fornecida.'}
           </Text>
         </View>
+
+        <AvaliacaoEvento eventoId={evento.id} tituloEvento={evento.titulo} isDark={isDark} />
 
         <TouchableOpacity style={styles.botaoWhatsApp} onPress={handleShareWhatsApp}>
           <Ionicons name="logo-whatsapp" size={24} color="#fff" style={{ marginRight: 10 }} />
