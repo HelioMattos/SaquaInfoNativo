@@ -1,26 +1,54 @@
-import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { getIconeCategoria } from '../utils/mapa';
+import IconeCategoria from './IconeCategoria';
 
 interface MarcadorMapaProps {
   categoria?: string;
   cor?: string;
+  destacado?: boolean;
 }
 
-export default function MarcadorMapa({ categoria, cor = '#007bff' }: MarcadorMapaProps) {
+export default function MarcadorMapa({
+  categoria,
+  cor = '#007bff',
+  destacado = false,
+}: MarcadorMapaProps) {
+  const tamanho = destacado ? 30 : 20;
+
   return (
-    <View style={[styles.container, { backgroundColor: cor }]}>
-      <Ionicons name={getIconeCategoria(categoria) as any} size={18} color="#fff" />
+    <View style={styles.area}>
+      <View style={[styles.camada, { transform: [{ scale: destacado ? 1.15 : 1 }] }]}>
+        <View style={styles.halo}>
+          <IconeCategoria categoria={categoria} size={tamanho + 4} color="#fff" />
+        </View>
+        <View style={styles.frente}>
+          <IconeCategoria categoria={categoria} size={tamanho} color={cor} />
+        </View>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 6,
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: '#fff',
+  area: {
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  camada: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  halo: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  frente: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { listarEventos } from '../lib/db/eventos';
 import { Evento, eventoEstaAtivo } from '../types/evento';
+import { getEmojiCategoria } from '../utils/mapa';
 
 function escapeHtml(texto: string) {
   return texto
@@ -11,6 +12,21 @@ function escapeHtml(texto: string) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+function formatarInicio(dataString: string) {
+  const data = new Date(dataString);
+  if (isNaN(data.getTime())) return 'Data não informada';
+  return `${data.toLocaleDateString('pt-BR')} às ${data.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })}`;
+}
+
+function resumir(texto: string, limite = 90) {
+  const limpo = texto.replace(/\s+/g, ' ').trim();
+  if (limpo.length <= limite) return limpo;
+  return `${limpo.slice(0, limite).trim()}…`;
 }
 
 export default function MapaExplore() {
@@ -62,24 +78,47 @@ export default function MapaExplore() {
 
   const marcadoresJs = eventos
     .filter((e) => e.latitude && e.longitude)
-    .map(
-      (e) => `
-      L.marker([${e.latitude}, ${e.longitude}])
-        .addTo(map)
-        .bindPopup(\`
-          <div style="font-family: sans-serif; text-align: center; padding: 5px;">
-            <h4 style="margin: 0 0 5px 0; color: #333;">${escapeHtml(e.titulo)}</h4>
-            <p style="margin: 0 0 10px 0; font-size: 12px; color: #666;">${escapeHtml(e.local)}</p>
-            <button
-              onclick="window.parent.postMessage({ type: 'NAVIGATE_EVENT', id: '${e.id}' }, '*')"
-              style="border: none; cursor: pointer; display: inline-block; background: #007bff; color: white; padding: 8px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; width: 100%;"
-            >
-              Ver Detalhes
-            </button>
-          </div>
-        \`);
-    `
-    )
+    .map((e) => {
+      const dica = `
+        <div class="dica-evento">
+          <strong>${escapeHtml(e.titulo)}</strong>
+          <span class="meta">${escapeHtml(e.categoria || 'Outros')} · ${escapeHtml(formatarInicio(e.dataInicio))}</span>
+          <span>${escapeHtml(e.local)}</span>
+          <span class="desc">${escapeHtml(resumir(e.descricao))}</span>
+          <em>Clique para abrir o evento</em>
+        </div>
+      `.replace(/\s+/g, ' ');
+
+      return `
+      (function() {
+        var marcador = L.marker([${e.latitude}, ${e.longitude}], {
+          icon: L.divIcon({
+            className: '',
+            html: ${JSON.stringify(`<div class="pin-area"><div class="pin-evento">${getEmojiCategoria(e.categoria)}</div></div>`)},
+            iconSize: [44, 44],
+            iconAnchor: [22, 22]
+          })
+        }).addTo(map);
+        marcador.bindTooltip(${JSON.stringify(dica)}, {
+          direction: 'top',
+          sticky: true,
+          opacity: 1,
+          className: 'balao-evento'
+        });
+        marcador.on('mouseover', function() {
+          var el = this.getElement();
+          if (el) el.classList.add('pin-hover');
+        });
+        marcador.on('mouseout', function() {
+          var el = this.getElement();
+          if (el) el.classList.remove('pin-hover');
+        });
+        marcador.on('click', function() {
+          window.parent.postMessage({ type: 'NAVIGATE_EVENT', id: ${JSON.stringify(e.id)} }, '*');
+        });
+      })();
+    `;
+    })
     .join('\n');
 
   const conteudoHtml = `
@@ -92,7 +131,42 @@ export default function MapaExplore() {
       <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
       <style>
         html, body, #map { margin: 0; padding: 0; width: 100%; height: 100%; }
-        .leaflet-popup-content-wrapper { border-radius: 8px; }
+        .balao-evento { background: transparent; border: none; box-shadow: none; }
+        .balao-evento .leaflet-tooltip-content { margin: 0; }
+        .dica-evento {
+          min-width: 180px;
+          max-width: 240px;
+          background: #fff;
+          border-radius: 10px;
+          padding: 10px 12px;
+          box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+          font-family: sans-serif;
+          color: #333;
+        }
+        .dica-evento strong { display: block; font-size: 14px; margin-bottom: 4px; }
+        .dica-evento span { display: block; font-size: 12px; color: #555; margin-top: 3px; }
+        .dica-evento .meta { color: #28a745; font-weight: bold; }
+        .dica-evento .desc { color: #666; }
+        .dica-evento em { display: block; margin-top: 6px; font-size: 12px; font-style: normal; color: #007bff; font-weight: bold; }
+        .pin-area {
+          width: 44px;
+          height: 44px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: transparent;
+        }
+        .pin-evento {
+          font-size: 22px;
+          line-height: 1;
+          filter: drop-shadow(0 0 2px #fff) drop-shadow(0 1px 2px rgba(0,0,0,0.45));
+          transform-origin: center center;
+          transition: transform 0.15s ease;
+        }
+        .leaflet-marker-icon:hover .pin-evento,
+        .pin-hover .pin-evento {
+          transform: scale(1.55);
+        }
       </style>
     </head>
     <body>

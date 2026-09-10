@@ -1,17 +1,17 @@
-export function getIconeCategoria(categoria?: string) {
+export function getEmojiCategoria(categoria?: string) {
   switch (categoria) {
     case 'Esportes':
-      return 'fitness';
+      return '🏃';
     case 'Show':
-      return 'mic';
+      return '🎤';
     case 'Comida':
-      return 'fast-food';
+      return '👨‍🍳';
     case 'Religioso':
-      return 'bonfire';
+      return '🙏';
     case 'Cultural':
-      return 'library';
+      return '📖';
     default:
-      return 'location';
+      return '📍';
   }
 }
 
@@ -25,32 +25,22 @@ export function configurarIconesLeaflet(L: typeof import('leaflet')) {
 }
 
 export function criarIconeEventoLeaflet(L: typeof import('leaflet'), categoria?: string) {
-  const icones: Record<string, string> = {
-    Esportes: '⚽',
-    Show: '🎵',
-    Comida: '🍽️',
-    Religioso: '🔥',
-    Cultural: '📚',
-  };
-
-  const emoji = icones[categoria || ''] || '📍';
+  const emoji = getEmojiCategoria(categoria);
 
   return L.divIcon({
     className: '',
     html: `<div style="
-      background:#007bff;
-      border:2px solid #fff;
-      border-radius:50%;
-      width:34px;
-      height:34px;
+      width:40px;
+      height:40px;
       display:flex;
       align-items:center;
       justify-content:center;
-      font-size:16px;
-      box-shadow:0 2px 6px rgba(0,0,0,0.25);
+      font-size:22px;
+      line-height:1;
+      filter: drop-shadow(0 0 2px #fff) drop-shadow(0 1px 2px rgba(0,0,0,0.45));
     ">${emoji}</div>`,
-    iconSize: [34, 34],
-    iconAnchor: [17, 17],
-    popupAnchor: [0, -20],
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
+    popupAnchor: [0, -18],
   });
 }
