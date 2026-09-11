@@ -1,64 +1,137 @@
-# SaquaInfo Nativo (Android)
+# SaquaInfo
 
-App Android para eventos e informações de Saquarema, com **banco de dados local (SQLite)** — sem Firebase e sem versão web.
+Aplicativo Android de eventos e informações de Saquarema, com persistência local e funcionamento Offline First.
 
-## Como rodar no Android
+## Integrantes
 
-### Opção 1: Expo Go (mais rápido para testar)
+- Karina Aires — 202312827
+- Helio Mattos — 202312427
+- Douglas Marinho — 202312271
+- Geuria Dos Santos — 202221604
+- Yuri Stefan — 202312649
 
-1. Instale o **Expo Go** no celular Android
-2. No PC:
+## Objetivo
 
-```bash
-npm install
-npm run android
-```
+Divulgar eventos de Saquarema (shows, esportes, cultura, comida e outros), com mapa, cadastro, avaliação e uso sem internet.
 
-3. Escaneie o QR code ou abra no emulador Android
+## Tecnologias
 
-### Opção 2: Emulador Android Studio
+- Android
+- React Native (Expo SDK 54)
+- TypeScript
+- SQLite local (`expo-sqlite`)
+- AsyncStorage (fila de sincronização e sessão)
+- Expo Router
+- React Native Maps / Leaflet (web)
+- NetInfo (detecção de rede)
+- API de demonstração: `https://jsonplaceholder.typicode.com/posts`
 
-1. Instale o [Android Studio](https://developer.android.com/studio) com um emulador configurado
-2. Rode:
+## Funcionalidades
 
-```bash
-npm install
-npm run android
-```
+- Cadastro, login e sessão local
+- Listagem, consulta, criação, edição e exclusão de eventos
+- Fotos, mapa, rota e compartilhamento
+- Avaliação com estrelas (1 a 5) e mensagem
+- Persistência no SQLite do aparelho
+- Indicador de conexão e status de sincronização
+- Funcionamento offline e sincronização ao reconectar
+
+## Offline First
+
+O aplicativo **não depende da internet** para as funções principais.
+
+- Eventos, usuários e avaliações ficam no **SQLite** do celular.
+- A sessão fica no **AsyncStorage**.
+- Com o modo avião ligado, o usuário continua vendo, cadastrando, editando e avaliando.
+- Cada alteração local recebe status **PENDENTE**.
+
+## Sincronização
+
+Quando a conexão volta, o app envia sozinho a fila de alterações.
+
+1. `NetInfo` detecta que a rede retornou.
+2. Os itens **PENDENTE** passam para **SINCRONIZANDO**.
+3. Cada item é enviado por `POST` para a API de demonstração.
+4. Em caso de sucesso, o status vira **SINCRONIZADO**.
+5. Se falhar, o dado **permanece no aparelho** e tenta de novo depois.
+
+A faixa no topo e a tela **Perfil** mostram: Offline, Sincronizando, Conectado e última sincronização.
 
 ## Conta admin inicial
 
-Na primeira execução, o app cria um administrador local:
+Na primeira execução o app cria o administrador local:
 
 | Campo | Valor |
 |-------|-------|
 | E-mail | `admin@saquainfo.com` |
 | Senha | `admin123` |
 
-Usuários comuns podem se cadastrar em **Criar Conta** na tela de login.
+Usuários comuns podem se cadastrar em **Criar Conta**.
 
-## Banco local
+## Como executar
 
-- **SQLite** via `expo-sqlite` (somente Android)
-- Dados ficam no aparelho (offline-first)
-- Sessão de login salva em **AsyncStorage**
-- Senhas com hash **bcrypt**
+### Pré-requisitos
 
-## Estrutura principal
-
-```
-app/           → Telas (Expo Router)
-components/    → UI, mapas, formulários
-context/       → Auth e tema
-lib/db/        → SQLite (usuários e eventos)
-lib/auth/      → Sessão e senha
-types/         → Tipos TypeScript
-```
-
-## Gerar APK (futuro)
-
-Para publicar na Play Store, use [EAS Build](https://docs.expo.dev/build/setup/):
+- Node.js
+- Android Studio com emulador **ou** celular com USB/`adb`
 
 ```bash
-npx eas build --platform android
+npm install
+npx expo start
 ```
+
+No emulador Android, com o Metro aberto:
+
+```bash
+adb reverse tcp:8081 tcp:8081
+adb shell am start -a android.intent.action.VIEW -d "exp://127.0.0.1:8081"
+```
+
+## APK
+
+Este projeto é **Expo**, não um app Kotlin/Java aberto direto no Android Studio. O APK de entrega precisa ir com o JavaScript **dentro do arquivo**, senão só funciona com o PC ligado.
+
+Arquivo entregue (release, com o JavaScript dentro):
+
+```text
+APK/SaquaInfo.apk
+```
+
+Cópia na Área de Trabalho: `SaquaInfo.apk` (~35 MB). Instale no celular permitindo fontes desconhecidas. Não precisa do computador ligado.
+
+### Opção recomendada (EAS, gera APK assinado)
+
+```bash
+npm install -g eas-cli
+eas login
+eas build -p android --profile preview
+```
+
+O `eas.json` já está configurado com `"buildType": "apk"`.
+
+### Opção local (Windows + Android Studio)
+
+No PowerShell, na pasta do projeto:
+
+```powershell
+$env:JAVA_HOME = "C:\Program Files\Microsoft\jdk-17.0.20.101-hotspot"
+$env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
+$env:Path = "$env:JAVA_HOME\bin;$env:ANDROID_HOME\platform-tools;$env:Path"
+
+npx expo prebuild --platform android
+npx expo run:android --variant release
+```
+
+O APK de release fica em:
+
+```text
+android/app/build/outputs/apk/release/
+```
+
+Renomeie para `SaquaInfo.apk` (sem espaços).
+
+> O APK de **debug** do Expo costuma precisar do Metro. Para o professor instalar em outro celular, use o APK de **preview/release**.
+
+## Repositório
+
+https://github.com/HelioMattos/SaquaInfoNativo
