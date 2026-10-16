@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SaquaInfo — Conectar no celular</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 480px;
+      margin: 40px auto;
+      padding: 24px;
+      text-align: center;
+      background: #f5f5f5;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    h1 { color: #007bff; margin-top: 0; }
+    img { margin: 16px 0; border-radius: 12px; }
+    code {
+      display: block;
+      background: #eef4ff;
+      padding: 12px;
+      border-radius: 8px;
+      word-break: break-all;
+      font-size: 14px;
+      margin: 12px 0;
+    }
+    ol { text-align: left; line-height: 1.7; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>SaquaInfo — Android</h1>
+    <p>Escaneie o QR code com o app <strong>Expo Go</strong></p>
+    <img id="qr" width="320" height="320" alt="QR Code Expo" />
+    <code id="url">exp://10.200.7.118:8081</code>
+    <ol>
+      <li>Instale o <strong>Expo Go</strong> na Play Store</li>
+      <li>Celular e PC na <strong>mesma Wi‑Fi</strong></li>
+      <li>Abra o Expo Go → <strong>Scan QR code</strong></li>
+      <li>Se não ler, use <strong>Enter URL manually</strong> e cole o link acima</li>
+    </ol>
+  </div>
+  <script>
+    var expoUrl = 'exp://10.200.7.118:8081';
+    document.getElementById('url').textContent = expoUrl;
+    document.getElementById('qr').src =
+      'https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=' +
+      encodeURIComponent(expoUrl);
+  </script>
+</body>
+</html>

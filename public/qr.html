@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SaquaInfo — QR Code</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f8f9fa;
+      color: #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      max-width: 420px;
+      width: 100%;
+      background: #fff;
+      border-radius: 20px;
+      padding: 32px 24px;
+      text-align: center;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+      border: 1px solid #eee;
+    }
+    h1 { margin: 0 0 8px; color: #007bff; font-size: 1.6rem; }
+    p { margin: 0 0 16px; color: #666; line-height: 1.5; }
+    img {
+      width: 280px;
+      height: 280px;
+      border-radius: 12px;
+      border: 1px solid #eee;
+      margin: 8px 0 20px;
+    }
+    .link {
+      display: inline-block;
+      color: #007bff;
+      font-weight: 600;
+      word-break: break-all;
+      margin-bottom: 24px;
+      text-decoration: none;
+    }
+    .dicas {
+      text-align: left;
+      background: #f0f7ff;
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+    .dicas strong { color: #007bff; }
+    .baixar {
+      display: inline-block;
+      margin-top: 20px;
+      background: #007bff;
+      color: #fff;
+      text-decoration: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>SaquaInfo</h1>
+    <p>Escaneie o QR Code para abrir o app no celular</p>
+
+    <img id="qr" alt="QR Code do SaquaInfo" width="280" height="280" />
+
+    <a class="link" id="site-link" href="#"></a>
+
+    <div class="dicas">
+      <strong>Android:</strong> abra a câmera ou leitor de QR → toque no link → no Chrome, use
+      <em>Instalar app</em> ou <em>Adicionar à tela inicial</em>.<br /><br />
+      <strong>iPhone:</strong> abra a Câmera → toque na notificação → no Safari, toque em
+      <em>Compartilhar</em> → <em>Adicionar à Tela de Início</em>.
+    </div>
+
+    <a class="baixar" id="baixar" href="#" download="saquainfo-qrcode.png">
+      Baixar imagem do QR Code
+    </a>
+  </div>
+
+  <script>
+    var siteUrl = window.location.origin;
+    var qrUrl =
+      'https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=' +
+      encodeURIComponent(siteUrl);
+
+    document.getElementById('qr').src = qrUrl;
+    document.getElementById('baixar').href = qrUrl;
+
+    var link = document.getElementById('site-link');
+    link.href = siteUrl;
+    link.textContent = siteUrl;
+  </script>
+</body>
+</html>
