@@ -1,7 +1,7 @@
 import * as Location from 'expo-location';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Platform } from 'react-native';
-import { obterLocalizacaoAtual } from './useLocalizacao';
+import { garantirPermissaoLocalizacao, obterLocalizacaoAtual } from './useLocalizacao';
 import { falar, pararFala } from '../utils/falar';
 import {
   buscarRota,
@@ -104,6 +104,15 @@ export function useNavegacao({
     avisoProximoRef.current = false;
   }, [pararWatch]);
 
+  // Desliga o GPS e a voz quando a tela do mapa é fechada.
+  useEffect(() => {
+    return () => {
+      navegandoRef.current = false;
+      pararWatch();
+      pararFala();
+    };
+  }, [pararWatch]);
+
   const iniciarWatch = useCallback(async () => {
     pararWatch();
 
@@ -125,9 +134,7 @@ export function useNavegacao({
       return;
     }
 
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permissão necessária', 'Ative a localização para usar a navegação guiada.');
+    if (!(await garantirPermissaoLocalizacao('Permita o acesso à localização para usar a navegação guiada.'))) {
       return;
     }
 
@@ -151,7 +158,12 @@ export function useNavegacao({
   const tracarRota = async () => {
     setCarregando(true);
     try {
-      let origem = await obterLocalizacaoAtual();
+      const localizacao = await obterLocalizacaoAtual();
+
+      // Sem permissão ou com o GPS desligado o usuário já foi avisado; não traça rota falsa.
+      if (localizacao.status === 'negada' || localizacao.status === 'gps-desligado') return;
+
+      let origem = localizacao.status === 'ok' ? localizacao.coordenada : null;
 
       if (!origem || gpsLongeDoEvento(origem, destino)) {
         origem = origemProximaDoEvento(destino);
@@ -182,12 +194,11 @@ export function useNavegacao({
   const iniciarNavegacao = async () => {
     if (!rotaRef.current) return;
 
-    if (Platform.OS !== 'web') {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permissão necessária', 'Ative a localização para usar a navegação guiada.');
-        return;
-      }
+    if (
+      Platform.OS !== 'web' &&
+      !(await garantirPermissaoLocalizacao('Permita o acesso à localização para usar a navegação guiada.'))
+    ) {
+      return;
     }
 
     navegandoRef.current = true;
