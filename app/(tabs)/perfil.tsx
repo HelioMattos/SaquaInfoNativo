@@ -46,6 +46,11 @@ export default function PerfilScreen() {
 
           <PainelStatusDados />
 
+          <TouchableOpacity style={styles.infoRow} onPress={() => router.push('/lembretes')}>
+            <Ionicons name="notifications-outline" size={24} color="#007bff" />
+            <Text style={styles.infoText}>Meus lembretes</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.infoRow} onPress={() => router.push('/qr')}>
             <Ionicons name="qr-code-outline" size={24} color="#007bff" />
             <Text style={styles.infoText}>QR Code do app</Text>
@@ -91,6 +96,11 @@ export default function PerfilScreen() {
               <Text style={styles.infoText}>Cadastrar novo evento</Text>
             </TouchableOpacity>
           )}
+
+          <TouchableOpacity style={styles.infoRow} onPress={() => router.push('/lembretes')}>
+            <Ionicons name="notifications-outline" size={24} color="#007bff" />
+            <Text style={styles.infoText}>Meus lembretes</Text>
+          </TouchableOpacity>
 
           <View style={styles.infoRow}>
             <Ionicons name="location-outline" size={24} color="#007bff" />

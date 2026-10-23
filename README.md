@@ -68,6 +68,32 @@ Na primeira execução o app cria o administrador local:
 
 Usuários comuns podem se cadastrar em **Criar Conta**.
 
+## Lembretes locais (Aula 3)
+
+Evento escolhido: **lembrete de um evento de Saquarema**. O usuário agenda uma notificação para não perder um show, campeonato ou feira.
+
+- Na tela do evento, **Criar lembrete** abre o formulário já preenchido (título, mensagem e horário sugerido 1 h antes do início).
+- Também em **Perfil > Meus lembretes**: lista com status **Agendado**, **Disparado** ou **Cancelado** e botão para cancelar.
+- Ao tocar na notificação, o app abre a tela do evento.
+- Funciona sem internet: o lembrete fica no SQLite (tabela `lembretes`) e o agendamento é feito no Android com `expo-notifications` (AlarmManager).
+
+Arquivos: `app/lembretes.tsx` (tela), `lib/notificacoes.ts` (permissão, validação, agendamento e cancelamento), `lib/db/lembretes.ts` (persistência) e `app/_layout.tsx` (abertura pela notificação).
+
+### Testar
+
+1. Gere o app nativo (a biblioteca de notificações exige rebuild): `npx expo run:android`.
+2. No Android 13+, toque em **Permitir notificações** e depois em **Testar notificação agora**.
+3. Abra um evento, toque em **Criar lembrete**, escolha um horário alguns minutos à frente e toque em **Agendar lembrete**.
+4. Volte à tela inicial do celular, aguarde a notificação e toque nela.
+
+### Limitações conhecidas
+
+- O horário é **aproximado** no Android 12+ (o app não pede alarme exato); Doze e economia de bateria podem atrasar a entrega.
+- Forçar parada nas configurações pode impedir a entrega.
+- O status **Disparado** é inferido quando o horário passou e o sistema não tem mais o agendamento.
+- Sem edição, recorrência ou confirmação de leitura; mudança manual de relógio/fuso não é tratada.
+- Não deve ser usado para alertas críticos.
+
 ## Como executar
 
 ### Pré-requisitos

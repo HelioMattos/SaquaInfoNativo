@@ -16,7 +16,8 @@
         "ACCESS_FINE_LOCATION",
         "CAMERA",
         "READ_MEDIA_IMAGES",
-        "READ_EXTERNAL_STORAGE"
+        "READ_EXTERNAL_STORAGE",
+        "POST_NOTIFICATIONS"
       ],
       "adaptiveIcon": {
         "backgroundColor": "#ffffff",
@@ -45,6 +46,13 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "O SaquaInfo usa sua localização para traçar a rota até os eventos."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/android-icon-monochrome.png",
+          "color": "#007bff"
         }
       ],
       [

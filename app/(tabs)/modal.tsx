@@ -248,6 +248,19 @@ export default function ModalScreen() {
           <Text style={styles.textoWhatsApp}>Compartilhar com Amigos</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity
+          style={[styles.botaoWhatsApp, { backgroundColor: '#007bff' }]}
+          onPress={() =>
+            router.push({
+              pathname: '/lembretes',
+              params: { eventoId: evento.id, titulo: evento.titulo, inicio: evento.dataInicio },
+            })
+          }
+        >
+          <Ionicons name="notifications" size={24} color="#fff" style={{ marginRight: 10 }} />
+          <Text style={styles.textoWhatsApp}>Criar lembrete</Text>
+        </TouchableOpacity>
+
         <MapaModal
           latitude={latitude}
           longitude={longitude}

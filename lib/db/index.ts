@@ -44,6 +44,19 @@ const CREATE_AVALIACOES = `
   );
 `;
 
+const CREATE_LEMBRETES = `
+  CREATE TABLE IF NOT EXISTS lembretes (
+    id TEXT PRIMARY KEY NOT NULL,
+    titulo TEXT NOT NULL,
+    mensagem TEXT NOT NULL,
+    quando INTEGER NOT NULL,
+    status TEXT NOT NULL DEFAULT 'AGENDADO',
+    evento_id TEXT,
+    notificacao_id TEXT,
+    criado_em TEXT NOT NULL
+  );
+`;
+
 function ehConexaoMorta(erro: unknown): boolean {
   const mensagem = erro instanceof Error ? erro.message : String(erro);
   return (
@@ -96,6 +109,7 @@ async function initDb(novaConexao: boolean): Promise<SQLite.SQLiteDatabase> {
   await db.execAsync(CREATE_USUARIOS);
   await db.execAsync(CREATE_EVENTOS);
   await db.execAsync(CREATE_AVALIACOES);
+  await db.execAsync(CREATE_LEMBRETES);
   await migrarSchema(db);
   await seedAdmin(db);
   return db;
