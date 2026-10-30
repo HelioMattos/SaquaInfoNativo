@@ -164,7 +164,7 @@ export default function CadastrarEvento() {
 
         <Text style={styles.label}>Fotos do evento</Text>
         <Text style={{ color: styles.colors.placeholder, fontSize: 12, marginBottom: 8 }}>
-          Toque para usar a câmera ou escolher da galeria. As fotos ficam salvas no banco, sem custo extra.
+          Toque para usar a câmera ou a galeria. A foto só entra no evento depois de confirmar a prévia.
         </Text>
         <SeletorFotos fotos={fotos} onChange={setFotos} isDark={isDark} obrigatoria />
 
