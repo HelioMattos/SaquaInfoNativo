@@ -2,7 +2,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { SafeAreaView, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import PainelNotificacoes from '../../components/PainelNotificacoes';
 import PainelStatusDados from '../../components/PainelStatusDados';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -46,7 +45,6 @@ export default function PerfilScreen() {
           </TouchableOpacity>
 
           <PainelStatusDados />
-          <PainelNotificacoes />
 
           <TouchableOpacity style={styles.infoRow} onPress={() => router.push('/qr')}>
             <Ionicons name="qr-code-outline" size={24} color="#007bff" />
@@ -78,7 +76,6 @@ export default function PerfilScreen() {
         </View>
 
         <PainelStatusDados />
-        <PainelNotificacoes />
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Minha Conta</Text>

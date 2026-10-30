@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import React, { useState } from 'react';
-import { Modal, Platform, Text, TouchableOpacity, View } from 'react-native';
-import { escolherImagem, mostrarOpcoesImagem, type OrigemFoto } from '../utils/imagens';
+import React from 'react';
+import { Platform, Text, TouchableOpacity, View } from 'react-native';
+import { mostrarOpcoesImagem } from '../utils/imagens';
 
 interface SeletorFotosProps {
   fotos: string[];
@@ -16,7 +16,6 @@ export default function SeletorFotos({ fotos, onChange, isDark, obrigatoria }: S
   const fundo = isDark ? '#1e1e1e' : '#f9f9f9';
   const texto = isDark ? '#fff' : '#333';
   const subtexto = isDark ? '#aaa' : '#666';
-  const [previa, setPrevia] = useState<{ index: number; uri: string; origem: OrigemFoto } | null>(null);
 
   const atualizarFoto = (index: number, uri: string) => {
     const novas = [...fotos];
@@ -32,26 +31,6 @@ export default function SeletorFotos({ fotos, onChange, isDark, obrigatoria }: S
   };
 
   const labels = ['Foto 1 (obrigatória)', 'Foto 2', 'Foto 3'];
-
-  const abrirPrevia = (index: number) => {
-    mostrarOpcoesImagem((uri, origem) => setPrevia({ index, uri, origem }));
-  };
-
-  const confirmarPrevia = () => {
-    if (!previa) return;
-    atualizarFoto(previa.index, previa.uri);
-    setPrevia(null);
-  };
-
-  const descartarPrevia = () => setPrevia(null);
-
-  const refazerPrevia = async () => {
-    if (!previa) return;
-    const { index, origem } = previa;
-    setPrevia(null);
-    const uri = await escolherImagem(origem);
-    if (uri) setPrevia({ index, uri, origem });
-  };
 
   return (
     <View>
@@ -85,7 +64,7 @@ export default function SeletorFotos({ fotos, onChange, isDark, obrigatoria }: S
                 <View style={{ flexDirection: 'row', padding: 10, gap: 8 }}>
                   <TouchableOpacity
                     style={flexBtn('#007bff')}
-                    onPress={() => abrirPrevia(index)}
+                    onPress={() => mostrarOpcoesImagem((nova) => atualizarFoto(index, nova))}
                   >
                     <Ionicons name="refresh" size={16} color="#fff" />
                     <Text style={btnText}>Trocar</Text>
@@ -99,7 +78,7 @@ export default function SeletorFotos({ fotos, onChange, isDark, obrigatoria }: S
             ) : (
               <TouchableOpacity
                 style={{ padding: 20, alignItems: 'center' }}
-                onPress={() => abrirPrevia(index)}
+                onPress={() => mostrarOpcoesImagem((nova) => atualizarFoto(index, nova))}
               >
                 <Ionicons name="image-outline" size={36} color="#007bff" />
                 <Text style={{ color: texto, fontWeight: 'bold', marginTop: 8 }}>
@@ -119,39 +98,6 @@ export default function SeletorFotos({ fotos, onChange, isDark, obrigatoria }: S
           </View>
         );
       })}
-
-      <Modal visible={!!previa} animationType="slide" transparent onRequestClose={descartarPrevia}>
-        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.55)' }}>
-          <View style={{ backgroundColor: fundo, borderTopLeftRadius: 16, borderTopRightRadius: 16, padding: 16 }}>
-            <Text style={{ color: texto, fontWeight: 'bold', fontSize: 18, marginBottom: 6 }}>
-              Confirmar foto
-            </Text>
-            <Text style={{ color: subtexto, marginBottom: 12 }}>
-              A foto só entra no evento depois de confirmar. Refazer descarta esta imagem e volta para a captura.
-            </Text>
-            {previa && (
-              <Image
-                source={{ uri: previa.uri }}
-                style={{ width: '100%', height: 220, borderRadius: 12, backgroundColor: isDark ? '#000' : '#eee' }}
-                contentFit="cover"
-              />
-            )}
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
-              <TouchableOpacity style={flexBtn('#28a745')} onPress={confirmarPrevia}>
-                <Ionicons name="checkmark" size={16} color="#fff" />
-                <Text style={btnText}>Confirmar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={flexBtn('#007bff')} onPress={() => void refazerPrevia()}>
-                <Ionicons name="refresh" size={16} color="#fff" />
-                <Text style={btnText}>Refazer</Text>
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity onPress={descartarPrevia} style={{ paddingVertical: 14, alignItems: 'center' }}>
-              <Text style={{ color: '#dc3545', fontWeight: 'bold' }}>Cancelar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }

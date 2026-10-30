@@ -1,21 +1,12 @@
 import { Stack } from 'expo-router';
-import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import StatusConexao from '../components/StatusConexao';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { SyncProvider } from '../context/SyncContext';
 import { ThemeProvider } from '../context/ThemeContext';
-import { garantirCanalLembretes } from '../lib/notificacoes';
-import { observarPublicacaoLembretes } from '../lib/lembretes';
 
 function RootNavigator() {
   const { loading } = useAuth();
-
-  useEffect(() => {
-    void garantirCanalLembretes();
-    const inscricao = observarPublicacaoLembretes();
-    return () => inscricao.remove();
-  }, []);
 
   if (loading) {
     return (
@@ -40,13 +31,6 @@ function RootNavigator() {
           options={{
             headerShown: true,
             title: 'Gerenciar Evento',
-          }}
-        />
-        <Stack.Screen
-          name="lembretes"
-          options={{
-            headerShown: true,
-            title: 'Lembretes de eventos',
           }}
         />
       </Stack>

@@ -1,35 +1,26 @@
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
-import { Alert, Linking, Platform } from 'react-native';
+import { Alert, Platform } from 'react-native';
 
-export type OrigemFoto = 'camera' | 'galeria';
+export async function solicitarPermissao(tipo: 'camera' | 'galeria'): Promise<boolean> {
+  if (tipo === 'camera') {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permissão necessária', 'Ative a câmera para tirar fotos dos eventos.');
+      return false;
+    }
+    return true;
+  }
 
-function avisarPermissaoNegada(tipo: OrigemFoto) {
-  const mensagem =
-    tipo === 'camera'
-      ? 'Ative a câmera para tirar fotos dos eventos. Nenhuma foto nova foi adicionada.'
-      : 'Ative o acesso às fotos para escolher imagens dos eventos. Nenhuma foto nova foi adicionada.';
-
-  Alert.alert('Permissão necessária', mensagem, [
-    { text: 'Agora não', style: 'cancel' },
-    { text: 'Abrir configurações', onPress: () => Linking.openSettings() },
-  ]);
-}
-
-export async function solicitarPermissao(tipo: OrigemFoto): Promise<boolean> {
-  const pedido =
-    tipo === 'camera'
-      ? await ImagePicker.requestCameraPermissionsAsync()
-      : await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-  if (pedido.status !== 'granted') {
-    avisarPermissaoNegada(tipo);
+  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (status !== 'granted') {
+    Alert.alert('Permissão necessária', 'Ative o acesso às fotos para escolher imagens dos eventos.');
     return false;
   }
   return true;
 }
 
-export async function escolherImagem(tipo: OrigemFoto): Promise<string | null> {
+export async function escolherImagem(tipo: 'camera' | 'galeria'): Promise<string | null> {
   const permitido = await solicitarPermissao(tipo);
   if (!permitido) return null;
 
@@ -57,7 +48,7 @@ function jaEhDataUrl(uri: string) {
   return uri.startsWith('data:image/');
 }
 
-/** Reduz a foto e converte para gravar no SQLite do aparelho. */
+/** Reduz a foto e converte para salvar direto no Firestore (sem Firebase Storage). */
 export async function prepararImagemParaSalvar(uri: string): Promise<string> {
   if (!uri) return '';
   if (ehUrlRemota(uri) || jaEhDataUrl(uri)) return uri;
@@ -89,20 +80,29 @@ export async function prepararListaImagens(fotos: string[]): Promise<string[]> {
   return lista;
 }
 
-export function mostrarOpcoesImagem(aoCapturar: (uri: string, origem: OrigemFoto) => void) {
-  const capturar = async (origem: OrigemFoto) => {
-    const uri = await escolherImagem(origem);
-    if (uri) aoCapturar(uri, origem);
-  };
-
+export function mostrarOpcoesImagem(aoEscolher: (uri: string) => void) {
   if (Platform.OS === 'web') {
-    void capturar('galeria');
+    escolherImagem('galeria').then((uri) => {
+      if (uri) aoEscolher(uri);
+    });
     return;
   }
 
   Alert.alert('Adicionar foto', 'Como deseja enviar a imagem?', [
     { text: 'Cancelar', style: 'cancel' },
-    { text: 'Câmera', onPress: () => void capturar('camera') },
-    { text: 'Galeria', onPress: () => void capturar('galeria') },
+    {
+      text: 'Câmera',
+      onPress: async () => {
+        const uri = await escolherImagem('camera');
+        if (uri) aoEscolher(uri);
+      },
+    },
+    {
+      text: 'Galeria',
+      onPress: async () => {
+        const uri = await escolherImagem('galeria');
+        if (uri) aoEscolher(uri);
+      },
+    },
   ]);
 }

@@ -29,14 +29,7 @@ export default function SeletorDataHora({
       setShowPicker((prev) => ({ ...prev, show: false }));
     }
     if (event.type === 'dismissed' || !selectedDate) return;
-
-    const proxima = new Date(value);
-    if (showPicker.mode === 'date') {
-      proxima.setFullYear(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
-    } else {
-      proxima.setHours(selectedDate.getHours(), selectedDate.getMinutes(), 0, 0);
-    }
-    onChange(proxima);
+    onChange(selectedDate);
   };
 
   return (

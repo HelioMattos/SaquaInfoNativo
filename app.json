@@ -16,8 +16,7 @@
         "ACCESS_FINE_LOCATION",
         "CAMERA",
         "READ_MEDIA_IMAGES",
-        "READ_EXTERNAL_STORAGE",
-        "POST_NOTIFICATIONS"
+        "READ_EXTERNAL_STORAGE"
       ],
       "adaptiveIcon": {
         "backgroundColor": "#ffffff",
@@ -53,14 +52,6 @@
         {
           "photosPermission": "O SaquaInfo acessa suas fotos para os eventos.",
           "cameraPermission": "O SaquaInfo usa a câmera para fotografar eventos."
-        }
-      ],
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/images/android-icon-monochrome.png",
-          "color": "#007bff",
-          "defaultChannel": "lembretes-eventos"
         }
       ]
     ],

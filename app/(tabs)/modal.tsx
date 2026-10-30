@@ -234,32 +234,6 @@ export default function ModalScreen() {
           </View>
         </View>
 
-        <TouchableOpacity
-          onPress={() =>
-            router.push({
-              pathname: '/lembretes',
-              params: {
-                eventoId: evento.id,
-                titulo: evento.titulo,
-                dataInicio: evento.dataInicio ?? '',
-              },
-            })
-          }
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderWidth: 1,
-            borderColor: '#007bff',
-            borderRadius: 12,
-            padding: 14,
-            marginBottom: 16,
-          }}
-        >
-          <Ionicons name="notifications-outline" size={22} color="#007bff" />
-          <Text style={{ color: '#007bff', fontWeight: 'bold', marginLeft: 8 }}>Lembrar deste evento</Text>
-        </TouchableOpacity>
-
         <View style={styles.descricaoContainer}>
           <Text style={styles.labelVerde}>Sobre o evento</Text>
           <Text style={styles.descricaoText}>

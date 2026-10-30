@@ -68,18 +68,6 @@ Na primeira execução o app cria o administrador local:
 
 Usuários comuns podem se cadastrar em **Criar Conta**.
 
-## Lembretes de eventos
-
-O aviso escolhido para a aula é o lembrete de um evento de Saquarema. Tudo fica no aparelho, sem internet e sem Firebase.
-
-1. Na aba **Perfil**, toque em **Agendar lembrete de evento**. Ou abra um evento e toque em **Lembrar deste evento**.
-2. Informe título, mensagem e um horário futuro. Campo vazio ou horário passado não salva nada.
-3. Toque em **Agendar**. A lista mostra o status **Agendado**.
-4. Para desistir antes do horário, toque em **Cancelar**. O histórico fica como **Cancelado**.
-5. **Testar notificação agora** só confirma a permissão e o canal. Não marca um horário.
-
-O Android pode atrasar o disparo por economia de bateria. Depois de reiniciar o celular, confira a lista e crie o lembrete de novo se o aviso não disparar.
-
 ## Como executar
 
 ### Pré-requisitos
