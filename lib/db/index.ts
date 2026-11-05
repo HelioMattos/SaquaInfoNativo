@@ -1,5 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 import { hashSenha } from '../auth/password';
+import { seedEventosDemo } from './seedDemo';
 
 let dbInstance: SQLite.SQLiteDatabase | null = null;
 let initPromise: Promise<SQLite.SQLiteDatabase> | null = null;
@@ -112,6 +113,7 @@ async function initDb(novaConexao: boolean): Promise<SQLite.SQLiteDatabase> {
   await db.execAsync(CREATE_LEMBRETES);
   await migrarSchema(db);
   await seedAdmin(db);
+  await seedEventosDemo(db);
   return db;
 }
 
