@@ -1,28 +1,37 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Platform,
-  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import MapView, { Marker, type Region } from 'react-native-maps';
 import { useTheme } from '../context/ThemeContext';
 import { listarEventos } from '../lib/db/eventos';
 import { Evento, eventoEstaAtivo, parseImagens } from '../types/evento';
-import MarcadorMapa from './MarcadorMapa';
+import { getEmojiCategoria } from '../utils/mapa';
+import { MensagemMapa, montarHtmlMapa } from '../utils/mapaLeaflet';
+import MapaLeaflet, { MapaLeafletRef } from './MapaLeaflet';
 
-const REGIAO_INICIAL: Region = {
+interface Regiao {
+  latitude: number;
+  longitude: number;
+  latitudeDelta: number;
+  longitudeDelta: number;
+}
+
+const REGIAO_INICIAL: Regiao = {
   latitude: -22.9251,
   longitude: -42.4862,
   latitudeDelta: 0.08,
   longitudeDelta: 0.08,
 };
+
+const ZOOM_INICIAL = 13;
 
 function distanciaAjustada(
   a: { latitude: number; longitude: number },
@@ -67,11 +76,17 @@ export default function MapaExplore() {
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [selecionado, setSelecionado] = useState<Evento | null>(null);
-  const [hoverId, setHoverId] = useState<string | null>(null);
-  const [regiao, setRegiao] = useState<Region>(REGIAO_INICIAL);
-  const [pontos, setPontos] = useState<Record<string, { x: number; y: number }>>({});
-  const mapRef = useRef<MapView>(null);
+  const [regiao, setRegiao] = useState<Regiao>(REGIAO_INICIAL);
+  const mapaRef = useRef<MapaLeafletRef>(null);
   const ultimoToqueMarcador = useRef(0);
+
+  // Mantem os dados frescos dentro dos callbacks do mapa sem refazer o HTML.
+  const eventosRef = useRef(eventos);
+  eventosRef.current = eventos;
+  const regiaoRef = useRef(regiao);
+  regiaoRef.current = regiao;
+  const selecionadoRef = useRef(selecionado);
+  selecionadoRef.current = selecionado;
 
   const cores = {
     fundo: isDark ? '#121212' : '#fff',
@@ -80,6 +95,17 @@ export default function MapaExplore() {
     subtexto: isDark ? '#aaa' : '#666',
     borda: isDark ? '#333' : '#e5e5e5',
   };
+
+  const html = useMemo(
+    () =>
+      montarHtmlMapa({
+        latitude: REGIAO_INICIAL.latitude,
+        longitude: REGIAO_INICIAL.longitude,
+        zoom: ZOOM_INICIAL,
+        isDark,
+      }),
+    [isDark]
+  );
 
   const carregarEventos = useCallback(async () => {
     setCarregando(true);
@@ -97,58 +123,91 @@ export default function MapaExplore() {
     }, [carregarEventos])
   );
 
-  const abrirEvento = (evento: Evento) => {
-    router.push({
-      pathname: '/modal',
-      params: { id: evento.id },
-    });
-  };
+  // Redesenha os marcadores sempre que a lista de eventos muda.
+  useEffect(() => {
+    const marcadores = eventos
+      .filter((evento) => evento.latitude && evento.longitude)
+      .map((evento) => ({
+        id: evento.id,
+        latitude: evento.latitude,
+        longitude: evento.longitude,
+        emoji: getEmojiCategoria(evento.categoria),
+      }));
 
-  const aoTocarMarcador = (evento: Evento) => {
-    if (selecionado?.id === evento.id) {
-      abrirEvento(evento);
-      return;
-    }
-    setSelecionado(evento);
-  };
-
-  const aoTocarMapa = (latitude: number, longitude: number) => {
-    if (Date.now() - ultimoToqueMarcador.current < 400) return;
-
-    const raio = Math.max(regiao.latitudeDelta, regiao.longitudeDelta) * 0.18;
-    const evento = eventoMaisProximo(eventos, latitude, longitude, raio);
-    if (!evento) {
-      setSelecionado(null);
-      return;
-    }
-    aoTocarMarcador(evento);
-  };
-
-  const atualizarPontos = useCallback(async () => {
-    if (!mapRef.current) return;
-    const proximo: Record<string, { x: number; y: number }> = {};
-
-    await Promise.all(
-      eventos.map(async (evento) => {
-        if (!evento.latitude || !evento.longitude) return;
-        try {
-          const ponto = await mapRef.current!.pointForCoordinate({
-            latitude: evento.latitude,
-            longitude: evento.longitude,
-          });
-          proximo[evento.id] = ponto;
-        } catch {
-          // o mapa ainda não calculou o ponto
-        }
-      })
+    mapaRef.current?.executar(
+      `window.SaquaMapa.definirMarcadores(${JSON.stringify(marcadores)})`
     );
-
-    setPontos(proximo);
   }, [eventos]);
 
+  // Aumenta o marcador do evento selecionado.
   useEffect(() => {
-    void atualizarPontos();
-  }, [atualizarPontos]);
+    mapaRef.current?.executar(
+      `window.SaquaMapa.destacar(${JSON.stringify(selecionado?.id ?? null)})`
+    );
+  }, [selecionado]);
+
+  const abrirEvento = useCallback(
+    (evento: Evento) => {
+      router.push({
+        pathname: '/modal',
+        params: { id: evento.id },
+      });
+    },
+    [router]
+  );
+
+  const aoTocarMarcador = useCallback(
+    (evento: Evento) => {
+      if (selecionadoRef.current?.id === evento.id) {
+        abrirEvento(evento);
+        return;
+      }
+      setSelecionado(evento);
+    },
+    [abrirEvento]
+  );
+
+  const aoTocarMapa = useCallback(
+    (latitude: number, longitude: number) => {
+      if (Date.now() - ultimoToqueMarcador.current < 400) return;
+
+      const atual = regiaoRef.current;
+      const raio = Math.max(atual.latitudeDelta, atual.longitudeDelta) * 0.18;
+      const evento = eventoMaisProximo(eventosRef.current, latitude, longitude, raio);
+      if (!evento) {
+        setSelecionado(null);
+        return;
+      }
+      aoTocarMarcador(evento);
+    },
+    [aoTocarMarcador]
+  );
+
+  const aoReceberMensagem = useCallback(
+    (mensagem: MensagemMapa) => {
+      if (mensagem.tipo === 'marcador') {
+        const evento = eventosRef.current.find((item) => item.id === mensagem.id);
+        if (!evento) return;
+        ultimoToqueMarcador.current = Date.now();
+        aoTocarMarcador(evento);
+        return;
+      }
+
+      if (mensagem.tipo === 'clique') {
+        aoTocarMapa(mensagem.latitude, mensagem.longitude);
+        return;
+      }
+
+      if (mensagem.tipo === 'movimento') {
+        setRegiao((anterior) => ({
+          ...anterior,
+          latitudeDelta: mensagem.latitudeDelta,
+          longitudeDelta: mensagem.longitudeDelta,
+        }));
+      }
+    },
+    [aoTocarMapa, aoTocarMarcador]
+  );
 
   if (carregando) {
     return (
@@ -163,70 +222,12 @@ export default function MapaExplore() {
 
   return (
     <View style={[styles.container, { backgroundColor: cores.fundo }]}>
-      <MapView
-        ref={mapRef}
+      <MapaLeaflet
+        ref={mapaRef}
+        html={html}
+        onMensagem={aoReceberMensagem}
         style={styles.map}
-        initialRegion={REGIAO_INICIAL}
-        onMapReady={() => {
-          void atualizarPontos();
-        }}
-        onRegionChangeComplete={(proxima) => {
-          setRegiao(proxima);
-          void atualizarPontos();
-        }}
-        onPress={(evento) => {
-          if (evento.nativeEvent.action === 'marker-press') return;
-          const { latitude, longitude } = evento.nativeEvent.coordinate;
-          aoTocarMapa(latitude, longitude);
-        }}
-      >
-        {eventos.map((evento) => {
-          if (!evento.latitude || !evento.longitude) return null;
-          const destacado = hoverId === evento.id || selecionado?.id === evento.id;
-
-          return (
-            <Marker
-              key={evento.id}
-              coordinate={{ latitude: evento.latitude, longitude: evento.longitude }}
-              anchor={{ x: 0.5, y: 0.5 }}
-              tracksViewChanges
-              onPress={() => {
-                ultimoToqueMarcador.current = Date.now();
-                aoTocarMarcador(evento);
-              }}
-            >
-              <MarcadorMapa categoria={evento.categoria} destacado={destacado} />
-            </Marker>
-          );
-        })}
-      </MapView>
-
-      <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
-        {eventos.map((evento) => {
-          const ponto = pontos[evento.id];
-          if (!ponto) return null;
-          const lado = hoverId === evento.id || selecionado?.id === evento.id ? 52 : 44;
-
-          return (
-            <Pressable
-              key={`hover-${evento.id}`}
-              onHoverIn={() => setHoverId(evento.id)}
-              onHoverOut={() => setHoverId((atual) => (atual === evento.id ? null : atual))}
-              onPress={() => {
-                ultimoToqueMarcador.current = Date.now();
-                aoTocarMarcador(evento);
-              }}
-              style={{
-                position: 'absolute',
-                left: ponto.x - lado / 2,
-                top: ponto.y - lado / 2,
-                width: lado,
-                height: lado,
-              }}
-            />
-          );
-        })}
-      </View>
+      />
 
       {selecionado ? (
         <TouchableOpacity
@@ -260,7 +261,7 @@ export default function MapaExplore() {
       ) : (
         <View style={[styles.dica, { backgroundColor: cores.cartao, borderColor: cores.borda }]}>
           <Text style={[styles.dicaTexto, { color: cores.subtexto }]}>
-            Passe o mouse ou toque no boneco para ver o evento
+            Toque no marcador para ver o evento
           </Text>
         </View>
       )}

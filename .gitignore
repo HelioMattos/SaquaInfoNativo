@@ -45,3 +45,6 @@ app-example
 # pastas duplicadas com git interno
 /saquainfo/
 /saquainfo1/
+
+# build local do APK
+*.apk

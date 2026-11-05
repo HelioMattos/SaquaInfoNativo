@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { StyleSheet } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapaLeaflet, { MapaLeafletRef } from './MapaLeaflet';
+import { MensagemMapa, montarHtmlMapa } from '../utils/mapaLeaflet';
 
 interface MapaCustomizadoProps {
   coordenadas: { latitude: number; longitude: number };
@@ -8,35 +9,53 @@ interface MapaCustomizadoProps {
   isDark?: boolean;
 }
 
-export default function MapaCustomizado({ coordenadas, setCoordenadas, isDark }: MapaCustomizadoProps) {
-  const [region, setRegion] = useState({
-    ...coordenadas,
-    latitudeDelta: 0.01,
-    longitudeDelta: 0.01,
-  });
+export default function MapaCustomizado({
+  coordenadas,
+  setCoordenadas,
+  isDark,
+}: MapaCustomizadoProps) {
+  const mapaRef = useRef<MapaLeafletRef>(null);
+  const setCoordenadasRef = useRef(setCoordenadas);
+  setCoordenadasRef.current = setCoordenadas;
+
+  // O centro inicial e fixado na montagem: trocar o HTML recarregaria o
+  // WebView a cada toque. O marcador acompanha por injecao de JS.
+  const centroInicial = useRef(coordenadas).current;
+
+  const html = useMemo(
+    () =>
+      montarHtmlMapa({
+        latitude: centroInicial.latitude,
+        longitude: centroInicial.longitude,
+        zoom: 15,
+        isDark,
+        cursorCruz: true,
+      }),
+    [centroInicial, isDark]
+  );
 
   useEffect(() => {
-    setRegion({
-      ...coordenadas,
-      latitudeDelta: 0.01,
-      longitudeDelta: 0.01,
-    });
+    mapaRef.current?.executar(
+      `window.SaquaMapa.definirMarcadorUnico(${coordenadas.latitude}, ${coordenadas.longitude})`
+    );
   }, [coordenadas.latitude, coordenadas.longitude]);
 
+  const aoReceberMensagem = useCallback((mensagem: MensagemMapa) => {
+    if (mensagem.tipo !== 'clique') return;
+    setCoordenadasRef.current({
+      latitude: mensagem.latitude,
+      longitude: mensagem.longitude,
+    });
+  }, []);
+
   return (
-    <MapView
+    <MapaLeaflet
+      ref={mapaRef}
+      html={html}
+      onMensagem={aoReceberMensagem}
       style={styles.map}
-      userInterfaceStyle={isDark ? 'dark' : 'light'}
-      region={region}
-      onRegionChangeComplete={setRegion}
-      onPress={(e) => setCoordenadas(e.nativeEvent.coordinate)}
-    >
-      <Marker
-        coordinate={coordenadas}
-        draggable
-        onDragEnd={(e) => setCoordenadas(e.nativeEvent.coordinate)}
-      />
-    </MapView>
+      rolagemAninhada
+    />
   );
 }
 
