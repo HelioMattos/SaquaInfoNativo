@@ -46,6 +46,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+      name="mensagens"
+      options={{
+        title: 'Mensagens',
+        tabBarIcon: ({ color }) => (
+        <Ionicons name="chatbubble" size={26} color={color} />
+    ),
+       }}
+     />
+      <Tabs.Screen
         name="modal"
         options={{
           href: null,

@@ -44,6 +44,36 @@ const CREATE_AVALIACOES = `
   );
 `;
 
+const CREATE_MENSAGENS = `
+  CREATE TABLE IF NOT EXISTS mensagens (
+    id TEXT PRIMARY KEY NOT NULL,
+    remetente_email TEXT NOT NULL,
+    destinatario_email TEXT NOT NULL,
+    conteudo TEXT NOT NULL,
+    lida INTEGER NOT NULL DEFAULT 0,
+    criada_em TEXT NOT NULL
+  );
+`;
+
+const CREATE_FEEDBACKS = `
+  CREATE TABLE IF NOT EXISTS feedbacks (
+    id TEXT PRIMARY KEY NOT NULL,
+    usuario_email TEXT NOT NULL,
+    nota INTEGER NOT NULL,
+    mensagem TEXT NOT NULL,
+    criado_em TEXT NOT NULL
+  );
+`;
+
+const CREATE_AVISOS_ADMIN = `
+  CREATE TABLE IF NOT EXISTS avisos_admin (
+    id TEXT PRIMARY KEY NOT NULL,
+    titulo TEXT NOT NULL,
+    mensagem TEXT NOT NULL,
+    criado_em TEXT NOT NULL
+  );
+`;
+
 function ehConexaoMorta(erro: unknown): boolean {
   const mensagem = erro instanceof Error ? erro.message : String(erro);
   return (
@@ -96,6 +126,9 @@ async function initDb(novaConexao: boolean): Promise<SQLite.SQLiteDatabase> {
   await db.execAsync(CREATE_USUARIOS);
   await db.execAsync(CREATE_EVENTOS);
   await db.execAsync(CREATE_AVALIACOES);
+  await db.execAsync(CREATE_MENSAGENS);
+  await db.execAsync(CREATE_FEEDBACKS);
+  await db.execAsync(CREATE_AVISOS_ADMIN);
   await migrarSchema(db);
   await seedAdmin(db);
   return db;
