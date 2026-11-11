@@ -78,7 +78,7 @@ O aviso escolhido para a aula é o lembrete de um evento de Saquarema. Tudo fica
 4. Para desistir antes do horário, toque em **Cancelar**. O histórico fica como **Cancelado**.
 5. **Testar notificação agora** só confirma a permissão e o canal. Não marca um horário.
 
-O Android pode atrasar o disparo por economia de bateria. Depois de reiniciar o celular, confira a lista e crie o lembrete de novo se o aviso não disparar.
+A data e a hora do formulário são o momento do aviso. O SaquaInfo dispara o aviso e abre a agenda do celular para confirmar o mesmo horário. Depois de reiniciar o celular, confira a lista e crie o lembrete de novo se o aviso do app não disparar.
 
 ## Como executar
 

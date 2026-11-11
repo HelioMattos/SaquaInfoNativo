@@ -86,8 +86,14 @@ export default function CadastrarEvento() {
   }, [isEdicao, params.id]);
 
   const handleSalvar = async () => {
-    if (!titulo || !local || !descricao || !fotos[0]) {
-      return Alert.alert('Atenção', 'Preencha Título, Local, Descrição e ao menos a primeira foto.');
+    const faltas = [
+      !titulo.trim() ? 'título' : '',
+      !local.trim() ? 'local' : '',
+      !descricao.trim() ? 'descrição' : '',
+      !fotos[0] ? 'a primeira foto' : '',
+    ].filter(Boolean);
+    if (faltas.length > 0) {
+      return Alert.alert('Atenção', `Falta preencher: ${faltas.join(', ')}.`);
     }
 
     setCarregando(true);
@@ -220,7 +226,7 @@ export default function CadastrarEvento() {
           placeholder="Detalhes..."
         />
 
-        <Text style={styles.label}>Toque no mapa para marcar o local exato</Text>
+        <Text style={styles.label}>Toque no mapa de ruas para marcar o local</Text>
         <Text style={{ color: styles.colors.placeholder, fontSize: 12, marginBottom: 6 }}>
           Lat: {coordenadas.latitude.toFixed(5)} | Lng: {coordenadas.longitude.toFixed(5)}
         </Text>

@@ -1,7 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import { Linking, Platform } from 'react-native';
 
-export const CANAL_LEMBRETES = 'lembretes-eventos';
+export const CANAL_LEMBRETES = 'lembretes-eventos-v2';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -20,8 +20,10 @@ export async function garantirCanalLembretes() {
   await Notifications.setNotificationChannelAsync(CANAL_LEMBRETES, {
     name: 'Lembretes de eventos',
     description: 'Avisos locais sobre eventos de Saquarema que você escolher lembrar.',
-    importance: Notifications.AndroidImportance.DEFAULT,
-    lockscreenVisibility: Notifications.AndroidNotificationVisibility.PRIVATE,
+    importance: Notifications.AndroidImportance.HIGH,
+    sound: 'default',
+    enableVibrate: true,
+    lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
     vibrationPattern: [0, 250, 250, 250],
   });
 }

@@ -8,4 +8,5 @@ export interface Lembrete {
   status: StatusLembrete;
   identificador: string;
   eventoId?: string;
+  agendaId?: string;
 }

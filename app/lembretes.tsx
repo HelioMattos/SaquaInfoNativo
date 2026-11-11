@@ -86,7 +86,9 @@ export default function LembretesScreen() {
       await atualizarLista();
       mostrarAlerta(
         'Lembrete agendado',
-        'O aviso fica neste aparelho. O Android pode atrasar o disparo para economizar bateria.'
+        resultado.naAgenda
+          ? 'A agenda do celular abriu com este lembrete. Confirme o salvamento nela. O SaquaInfo também avisa nesse horário.'
+          : resultado.avisoAgenda || 'O aviso ficou salvo no SaquaInfo.'
       );
     } catch {
       mostrarAlerta('Lembrete', 'Não foi possível agendar. Nenhum lembrete novo foi salvo.');
@@ -156,7 +158,7 @@ export default function LembretesScreen() {
             }}
           />
 
-          <Text style={{ color: texto, fontWeight: 'bold', marginBottom: 6 }}>Data e hora</Text>
+          <Text style={{ color: texto, fontWeight: 'bold', marginBottom: 6 }}>Quando avisar</Text>
           <SeletorDataHora
             value={quando}
             onChange={setQuando}
@@ -189,7 +191,7 @@ export default function LembretesScreen() {
             </Text>
           </TouchableOpacity>
           <Text style={{ color: subtexto, marginTop: 10, lineHeight: 20 }}>
-            O horário é aproximado. O Android pode entregar o aviso depois da hora escolhida.
+            Esta data e hora são o momento do aviso, mesmo que o evento seja em outro dia. A agenda do celular abre para você confirmar o lembrete.
           </Text>
         </View>
 

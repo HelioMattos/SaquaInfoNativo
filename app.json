@@ -10,14 +10,18 @@
     "newArchEnabled": true,
     "android": {
       "package": "com.saquainfo.app",
-      "versionCode": 1,
+      "versionCode": 5,
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
         "CAMERA",
         "READ_MEDIA_IMAGES",
         "READ_EXTERNAL_STORAGE",
-        "POST_NOTIFICATIONS"
+        "POST_NOTIFICATIONS",
+        "READ_CALENDAR",
+        "WRITE_CALENDAR",
+        "SCHEDULE_EXACT_ALARM",
+        "USE_EXACT_ALARM"
       ],
       "adaptiveIcon": {
         "backgroundColor": "#ffffff",
@@ -60,7 +64,7 @@
         {
           "icon": "./assets/images/android-icon-monochrome.png",
           "color": "#007bff",
-          "defaultChannel": "lembretes-eventos"
+          "defaultChannel": "lembretes-eventos-v2"
         }
       ]
     ],

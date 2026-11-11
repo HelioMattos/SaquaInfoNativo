@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import StatusConexao from '../components/StatusConexao';
@@ -12,9 +13,15 @@ function RootNavigator() {
   const { loading } = useAuth();
 
   useEffect(() => {
+    const quadro = requestAnimationFrame(() => {
+      void SplashScreen.hideAsync();
+    });
     void garantirCanalLembretes();
     const inscricao = observarPublicacaoLembretes();
-    return () => inscricao.remove();
+    return () => {
+      cancelAnimationFrame(quadro);
+      inscricao.remove();
+    };
   }, []);
 
   if (loading) {
@@ -39,7 +46,7 @@ function RootNavigator() {
           name="cadastrar"
           options={{
             headerShown: true,
-            title: 'Gerenciar Evento',
+            title: 'Evento 1.0.7',
           }}
         />
         <Stack.Screen

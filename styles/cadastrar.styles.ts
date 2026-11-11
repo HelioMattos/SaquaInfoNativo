@@ -34,7 +34,7 @@ export const getCadastrarStyles = (isDark: boolean) => {
     catText: { fontSize: 12, color: theme.texto, marginLeft: 5 },
     catTextSelected: { color: '#fff', fontWeight: 'bold' }, 
 
-    mapContainer: { height: 220, marginTop: 10, borderRadius: 15, overflow: 'hidden', borderWidth: 1, borderColor: theme.inputBorder },
+    mapContainer: { marginTop: 10, borderRadius: 15, overflow: 'hidden', borderWidth: 1, borderColor: theme.inputBorder },
     map: { flex: 1 },
     
     // BOTÕES DE AÇÃO

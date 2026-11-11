@@ -1,10 +1,9 @@
-import React, { useCallback, useRef } from 'react';
-import { View } from 'react-native';
-import MapView, { Marker, Polyline } from 'react-native-maps';
+import React from 'react';
+import { Linking, View } from 'react-native';
 import { useNavegacao } from '../hooks/useNavegacao';
 import { Coordenada } from '../utils/rota';
-import MarcadorMapa from './MarcadorMapa';
 import MapaRotaControls from './MapaRotaControls';
+import MapaTiles from './MapaTiles';
 
 interface MapaModalProps {
   latitude: number;
@@ -19,32 +18,10 @@ interface MapaModalProps {
   };
 }
 
-export default function MapaModal({
-  latitude,
-  longitude,
-  titulo,
-  categoria,
-  isDark,
-  styles,
-}: MapaModalProps) {
-  const mapRef = useRef<MapView>(null);
+export default function MapaModal({ latitude, longitude, isDark, styles }: MapaModalProps) {
   const destino: Coordenada = { latitude, longitude };
-
-  const onCentralizarMapa = useCallback((posicao: Coordenada) => {
-    mapRef.current?.animateToRegion(
-      {
-        latitude: posicao.latitude,
-        longitude: posicao.longitude,
-        latitudeDelta: 0.008,
-        longitudeDelta: 0.008,
-      },
-      600
-    );
-  }, []);
-
   const {
     rota,
-    minhaPosicao,
     carregando,
     navegando,
     passoAtual,
@@ -54,63 +31,18 @@ export default function MapaModal({
     iniciarNavegacao,
     pararNavegacao,
     limparRota,
-  } = useNavegacao({ destino, onCentralizarMapa });
+  } = useNavegacao({ destino });
 
-  const handleTracarRota = async () => {
-    const resultado = await tracarRota();
-    if (!resultado) return;
-
-    const { origem, infoRota } = resultado;
-    const pontos = [origem, destino, ...infoRota.coordenadas];
-    mapRef.current?.fitToCoordinates(pontos, {
-      edgePadding: { top: 40, right: 40, bottom: 40, left: 40 },
-      animated: true,
-    });
-  };
-
-  const handleLimparRota = () => {
-    limparRota();
-    mapRef.current?.animateToRegion({
-      latitude,
-      longitude,
-      latitudeDelta: 0.01,
-      longitudeDelta: 0.01,
-    });
+  const abrirNoMapa = () => {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+    void Linking.openURL(url);
   };
 
   return (
     <View>
       <View style={[styles.mapWrapper, (rota || navegando) && styles.mapWrapperRota]}>
-        <MapView
-          ref={mapRef}
-          style={styles.map}
-          userInterfaceStyle={isDark ? 'dark' : 'light'}
-          showsUserLocation
-          showsMyLocationButton
-          followsUserLocation={navegando}
-          initialRegion={{
-            latitude,
-            longitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          }}
-        >
-          <Marker coordinate={destino} title={titulo}>
-            <MarcadorMapa categoria={categoria} />
-          </Marker>
-
-          {minhaPosicao && (
-            <Marker coordinate={minhaPosicao} title="Você está aqui">
-              <MarcadorMapa cor="#28a745" />
-            </Marker>
-          )}
-
-          {rota && (
-            <Polyline coordinates={rota.coordenadas} strokeColor="#007bff" strokeWidth={4} />
-          )}
-        </MapView>
+        <MapaTiles latitude={latitude} longitude={longitude} altura={220} />
       </View>
-
       <MapaRotaControls
         carregando={carregando}
         rota={rota}
@@ -119,10 +51,13 @@ export default function MapaModal({
         passoAtual={passoAtual}
         proximoPasso={proximoPasso}
         distanciaFormatada={distanciaFormatada}
-        onTracarRota={handleTracarRota}
+        onTracarRota={() => {
+          void tracarRota();
+          abrirNoMapa();
+        }}
         onIniciarNavegacao={iniciarNavegacao}
         onPararNavegacao={pararNavegacao}
-        onLimparRota={rota ? handleLimparRota : undefined}
+        onLimparRota={rota ? limparRota : undefined}
       />
     </View>
   );

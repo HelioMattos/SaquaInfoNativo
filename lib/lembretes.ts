@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
+import { removerLembreteDaAgenda, salvarLembreteNaAgenda } from './agenda';
 import { CANAL_LEMBRETES, prepararNotificacaoLocal } from './notificacoes';
 import type { Lembrete } from '../types/lembrete';
 
@@ -68,7 +69,7 @@ export async function agendarLembrete(entrada: {
   mensagem: string;
   quando: Date;
   eventoId?: string;
-}): Promise<{ ok: true } | { ok: false; mensagem: string }> {
+}): Promise<{ ok: true; naAgenda: boolean; avisoAgenda?: string } | { ok: false; mensagem: string }> {
   const titulo = entrada.titulo.trim();
   const mensagem = entrada.mensagem.trim();
   if (!titulo || !mensagem) {
@@ -129,7 +130,14 @@ export async function agendarLembrete(entrada: {
       return { ok: false, mensagem: 'O lembrete não foi salvo neste aparelho. O alarme foi desfeito.' };
     }
 
-    return { ok: true };
+    const agenda = await salvarLembreteNaAgenda({ titulo, mensagem, quando });
+    if (agenda.ok) {
+      lembrete.agendaId = agenda.agendaId;
+      await gravar(arquivo);
+      return { ok: true, naAgenda: true };
+    }
+
+    return { ok: true, naAgenda: false, avisoAgenda: agenda.mensagem };
   });
 }
 
@@ -154,6 +162,7 @@ export async function cancelarLembrete(id: number): Promise<{ ok: true } | { ok:
       // O aviso ainda não estava na bandeja.
     }
 
+    if (item.agendaId) await removerLembreteDaAgenda(item.agendaId);
     item.status = 'Cancelado';
     await gravar(arquivo);
     return { ok: true };
